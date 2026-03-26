@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=JetBrains+Mono:wght@400;500&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<!-- Firebase 10 Compat CDN -->
+<!-- Firebase 10 Compat CDN (compat build = no module bundler needed) -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -15,42 +15,78 @@
 
 <style>
 /* ============================================================
-   CSS VARIABLES & RESET
+   CSS CUSTOM PROPERTIES
    ============================================================ */
 :root {
-  --bg:           #0c0e14;
-  --bg-2:         #13161f;
-  --bg-3:         #1b1f2d;
-  --bg-4:         #242840;
-  --border:       #2b2f45;
-  --border-light: #3c4260;
-  --text:         #e2e8f0;
-  --text-muted:   #7a8499;
-  --text-dim:     #404660;
-  --accent:       #f5a623;
-  --accent-h:     #fbbf24;
-  --accent-dim:   rgba(245,166,35,0.12);
-  --accent-glow:  rgba(245,166,35,0.35);
-  --purple:       #8b5cf6;
-  --purple-dim:   rgba(139,92,246,0.13);
-  --green:        #10b981;
-  --green-dim:    rgba(16,185,129,0.13);
-  --red:          #ef4444;
-  --red-dim:      rgba(239,68,68,0.13);
-  --blue:         #3b82f6;
-  --blue-dim:     rgba(59,130,246,0.13);
-  --r-card:       16px;
-  --r-lg:         20px;
-  --shadow:       0 4px 24px rgba(0,0,0,0.45);
-  --shadow-lg:    0 12px 56px rgba(0,0,0,0.65);
-  --transition:   all 0.2s cubic-bezier(0.4,0,0.2,1);
-  --font-display: 'Playfair Display', serif;
-  --font-mono:    'JetBrains Mono', monospace;
-  --font-body:    'Nunito', sans-serif;
+  /* Backgrounds */
+  --bg:             #0c0e14;
+  --bg-2:           #13161f;
+  --bg-3:           #1b1f2d;
+  --bg-4:           #242840;
+
+  /* Borders */
+  --border:         #2b2f45;
+  --border-light:   #3c4260;
+
+  /* Text */
+  --text:           #e2e8f0;
+  --text-muted:     #7a8499;
+  --text-dim:       #3a3f58;
+
+  /* Accent – amber/gold */
+  --accent:         #f5a623;
+  --accent-hover:   #fbbf24;
+  --accent-dim:     rgba(245, 166, 35, 0.12);
+  --accent-glow:    rgba(245, 166, 35, 0.35);
+
+  /* Purple */
+  --purple:         #8b5cf6;
+  --purple-dim:     rgba(139, 92, 246, 0.13);
+
+  /* Green */
+  --green:          #10b981;
+  --green-dim:      rgba(16, 185, 129, 0.13);
+
+  /* Red */
+  --red:            #ef4444;
+  --red-dim:        rgba(239, 68, 68, 0.13);
+
+  /* Blue */
+  --blue:           #3b82f6;
+  --blue-dim:       rgba(59, 130, 246, 0.13);
+
+  /* Orange */
+  --orange:         #f97316;
+  --orange-dim:     rgba(249, 115, 22, 0.13);
+
+  /* Radius / Shadow */
+  --radius-card:    16px;
+  --radius-lg:      22px;
+  --shadow-sm:      0 2px 12px rgba(0, 0, 0, 0.35);
+  --shadow:         0 4px 24px rgba(0, 0, 0, 0.45);
+  --shadow-lg:      0 12px 56px rgba(0, 0, 0, 0.65);
+
+  /* Transitions */
+  --transition:     all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Fonts */
+  --font-display:   'Playfair Display', serif;
+  --font-mono:      'JetBrains Mono', monospace;
+  --font-body:      'Nunito', sans-serif;
 }
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
 
 body {
   font-family: var(--font-body);
@@ -58,26 +94,32 @@ body {
   color: var(--text);
   min-height: 100vh;
   overflow-x: hidden;
+  line-height: 1.5;
 }
 
-/* Dot-grid background texture */
+/* Subtle dot-grid background texture */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
-  background-image: radial-gradient(circle, rgba(255,255,255,0.035) 1px, transparent 1px);
+  background-image: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.03) 1px,
+    transparent 1px
+  );
   background-size: 28px 28px;
   pointer-events: none;
   z-index: 0;
 }
 
-::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track { background: var(--bg-2); }
-::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 4px; }
+/* Scrollbars */
+::-webkit-scrollbar         { width: 5px; }
+::-webkit-scrollbar-track   { background: var(--bg-2); }
+::-webkit-scrollbar-thumb   { background: var(--border-light); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
 /* ============================================================
-   LOADING SCREEN
+   LOADING OVERLAY
    ============================================================ */
 #loading-overlay {
   position: fixed;
@@ -86,17 +128,21 @@ body::before {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
   flex-direction: column;
   gap: 20px;
+  z-index: 9999;
+  transition: opacity 0.4s ease;
 }
 
 .loading-logo {
-  font-size: 52px;
-  animation: pulse 1.5s ease-in-out infinite;
+  font-size: 56px;
+  animation: loading-pulse 1.6s ease-in-out infinite;
 }
 
-@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+@keyframes loading-pulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.1); }
+}
 
 .loading-spinner {
   width: 44px;
@@ -107,13 +153,15 @@ body::before {
   animation: spin 0.75s linear infinite;
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 
 .loading-label {
   font-family: var(--font-mono);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--text-muted);
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
@@ -135,38 +183,59 @@ body::before {
   background: var(--bg-3);
   border: 1px solid var(--border-light);
   border-radius: 12px;
-  padding: 14px 18px;
+  padding: 13px 17px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   font-size: 0.875rem;
   font-weight: 600;
   box-shadow: var(--shadow);
-  max-width: 380px;
-  animation: toastIn 0.3s ease, toastOut 0.35s ease 2.65s forwards;
+  max-width: 420px;
+  line-height: 1.45;
+  animation: toast-in 0.3s ease, toast-out 0.35s ease 3.65s forwards;
 }
 
 .toast.success { border-left: 4px solid var(--green); }
 .toast.error   { border-left: 4px solid var(--red); }
 .toast.info    { border-left: 4px solid var(--accent); }
+.toast.warn    { border-left: 4px solid var(--orange); }
+.toast .toast-icon { flex-shrink: 0; }
 
-@keyframes toastIn  { from{opacity:0;transform:translateX(110%) scale(0.9)} to{opacity:1;transform:none} }
-@keyframes toastOut { from{opacity:1;transform:none} to{opacity:0;transform:translateX(110%) scale(0.9)} }
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(110%) scale(0.9); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes toast-out {
+  from { opacity: 1; transform: none; }
+  to   { opacity: 0; transform: translateX(110%) scale(0.9); }
+}
 
 /* ============================================================
-   SHARED FORM / BUTTON PRIMITIVES
+   SHARED FORM PRIMITIVES
    ============================================================ */
-.form-group { margin-bottom: 16px; }
-.form-group:last-child { margin-bottom: 0; }
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
 
 .form-label {
   display: block;
-  font-size: 0.75rem;
+  font-size: 0.73rem;
   font-weight: 800;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.09em;
   margin-bottom: 8px;
+}
+
+.form-label .form-label-note {
+  color: var(--text-dim);
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 .form-input {
@@ -188,9 +257,14 @@ body::before {
   box-shadow: 0 0 0 3px var(--accent-dim);
 }
 
-.form-input::placeholder { color: var(--text-dim); }
+.form-input::placeholder {
+  color: var(--text-dim);
+}
 
-textarea.form-input { min-height: 110px; line-height: 1.6; }
+textarea.form-input {
+  min-height: 120px;
+  line-height: 1.65;
+}
 
 .form-row {
   display: grid;
@@ -198,6 +272,9 @@ textarea.form-input { min-height: 110px; line-height: 1.6; }
   gap: 14px;
 }
 
+/* ============================================================
+   BUTTON STYLES
+   ============================================================ */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -212,40 +289,67 @@ textarea.form-input { min-height: 110px; line-height: 1.6; }
   cursor: pointer;
   transition: var(--transition);
   white-space: nowrap;
+  text-decoration: none;
 }
 
-.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
 
+/* Primary – amber */
 .btn-primary {
   background: var(--accent);
   color: #0c0e14;
 }
 .btn-primary:hover:not(:disabled) {
-  background: var(--accent-h);
+  background: var(--accent-hover);
   transform: translateY(-1px);
   box-shadow: 0 4px 18px var(--accent-glow);
 }
 
+/* Secondary – outlined */
 .btn-secondary {
   background: var(--bg-3);
   border: 1.5px solid var(--border);
   color: var(--text);
 }
-.btn-secondary:hover { background: var(--bg-4); border-color: var(--border-light); }
+.btn-secondary:hover:not(:disabled) {
+  background: var(--bg-4);
+  border-color: var(--border-light);
+}
 
+/* Danger – red tinted */
 .btn-danger {
   background: var(--red-dim);
-  border: 1.5px solid rgba(239,68,68,0.3);
+  border: 1.5px solid rgba(239, 68, 68, 0.3);
   color: #fca5a5;
 }
-.btn-danger:hover { background: rgba(239,68,68,0.22); }
+.btn-danger:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.22);
+}
 
+/* Purple */
 .btn-purple {
   background: var(--purple-dim);
-  border: 1.5px solid rgba(139,92,246,0.3);
+  border: 1.5px solid rgba(139, 92, 246, 0.3);
   color: #c4b5fd;
 }
-.btn-purple:hover { background: rgba(139,92,246,0.22); }
+.btn-purple:hover:not(:disabled) {
+  background: rgba(139, 92, 246, 0.22);
+}
+
+/* Orange */
+.btn-orange {
+  background: var(--orange-dim);
+  border: 1.5px solid rgba(249, 115, 22, 0.3);
+  color: #fdba74;
+}
+.btn-orange:hover:not(:disabled) {
+  background: rgba(249, 115, 22, 0.22);
+}
 
 /* ============================================================
    AUTH PAGE
@@ -268,78 +372,86 @@ textarea.form-input { min-height: 110px; line-height: 1.6; }
 .auth-card {
   background: var(--bg-2);
   border: 1px solid var(--border);
-  border-radius: 24px;
-  padding: 44px 40px;
+  border-radius: 26px;
+  padding: 46px 42px;
   box-shadow: var(--shadow-lg);
   position: relative;
   overflow: hidden;
 }
 
+/* Animated rainbow bar at top of card */
 .auth-card::before {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--accent), var(--purple), var(--accent));
-  background-size: 200% 100%;
-  animation: shimmer 3s linear infinite;
+  background: linear-gradient(
+    90deg,
+    var(--accent), var(--purple), var(--green), var(--orange), var(--accent)
+  );
+  background-size: 300% 100%;
+  animation: shimmer 5s linear infinite;
 }
 
-@keyframes shimmer { 0%{background-position:200%} 100%{background-position:-200%} }
+@keyframes shimmer {
+  0%   { background-position: 200%; }
+  100% { background-position: -200%; }
+}
 
 .auth-hero {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 34px;
 }
 
-.auth-icon {
-  width: 64px;
-  height: 64px;
+.auth-app-icon {
+  width: 68px;
+  height: 68px;
   background: linear-gradient(135deg, var(--accent), var(--purple));
-  border-radius: 20px;
+  border-radius: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 30px;
-  margin: 0 auto 14px;
-  box-shadow: 0 8px 24px var(--accent-glow);
+  font-size: 32px;
+  margin: 0 auto 16px;
+  box-shadow: 0 8px 28px var(--accent-glow);
 }
 
 .auth-hero h1 {
   font-family: var(--font-display);
-  font-size: 2rem;
+  font-size: 2.1rem;
   font-weight: 700;
   background: linear-gradient(135deg, var(--accent), #fde68a);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .auth-hero p {
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   color: var(--text-muted);
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
+/* Login / Register tab switcher */
 .auth-tabs {
   display: flex;
   background: var(--bg-3);
   border-radius: 12px;
   padding: 4px;
   gap: 4px;
-  margin-bottom: 24px;
+  margin-bottom: 26px;
 }
 
 .auth-tab {
   flex: 1;
-  padding: 10px;
+  padding: 11px;
   border: none;
   background: transparent;
   color: var(--text-muted);
   font-family: var(--font-body);
   font-weight: 700;
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   border-radius: 9px;
   cursor: pointer;
   transition: var(--transition);
@@ -348,23 +460,29 @@ textarea.form-input { min-height: 110px; line-height: 1.6; }
 .auth-tab.active {
   background: var(--accent);
   color: #0c0e14;
-  box-shadow: 0 2px 10px var(--accent-glow);
+  box-shadow: 0 2px 12px var(--accent-glow);
 }
 
-.auth-error {
+/* Auth error banner */
+.auth-error-box {
   background: var(--red-dim);
-  border: 1px solid rgba(239,68,68,0.3);
+  border: 1px solid rgba(239, 68, 68, 0.35);
   color: #fca5a5;
   border-radius: 10px;
-  padding: 11px 14px;
-  font-size: 0.85rem;
-  margin-bottom: 16px;
+  padding: 12px 14px;
+  font-size: 0.87rem;
+  margin-bottom: 18px;
   display: none;
-  align-items: center;
-  gap: 8px;
+  align-items: flex-start;
+  gap: 9px;
+  line-height: 1.5;
 }
-.auth-error.show { display: flex; }
 
+.auth-error-box.visible {
+  display: flex;
+}
+
+/* Google sign-in button */
 .btn-google {
   width: 100%;
   background: var(--bg-3);
@@ -380,24 +498,34 @@ textarea.form-input { min-height: 110px; line-height: 1.6; }
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 11px;
   margin-bottom: 20px;
 }
-.btn-google:hover { background: var(--bg-4); border-color: var(--border-light); }
+
+.btn-google:hover {
+  background: var(--bg-4);
+  border-color: var(--border-light);
+}
 
 .auth-divider {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 13px;
   color: var(--text-dim);
   font-size: 0.8rem;
   margin-bottom: 20px;
 }
+
 .auth-divider::before,
-.auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
 
 /* ============================================================
-   MAIN APP LAYOUT
+   MAIN APP WRAPPER
    ============================================================ */
 #main-app {
   display: none;
@@ -407,45 +535,45 @@ textarea.form-input { min-height: 110px; line-height: 1.6; }
 }
 
 /* ============================================================
-   HEADER
+   APP HEADER
    ============================================================ */
 .app-header {
   position: sticky;
   top: 0;
   z-index: 200;
-  background: rgba(12,14,20,0.88);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(12, 14, 20, 0.9);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
   border-bottom: 1px solid var(--border);
-  height: 62px;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 28px;
+  padding: 0 30px;
 }
 
 .header-brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 11px;
   text-decoration: none;
 }
 
 .header-brand-icon {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   background: linear-gradient(135deg, var(--accent), var(--purple));
-  border-radius: 10px;
+  border-radius: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 20px;
   flex-shrink: 0;
 }
 
-.header-brand h1 {
+.header-brand-title {
   font-family: var(--font-display);
-  font-size: 1.25rem;
+  font-size: 1.3rem;
   font-weight: 700;
   background: linear-gradient(135deg, var(--accent), #fde68a);
   -webkit-background-clip: text;
@@ -459,93 +587,126 @@ textarea.form-input { min-height: 110px; line-height: 1.6; }
   gap: 10px;
 }
 
+/* Admin badge */
 .badge-admin {
   background: linear-gradient(135deg, var(--purple), #6366f1);
-  color: white;
-  font-size: 0.675rem;
+  color: #ffffff;
+  font-size: 0.67rem;
   font-weight: 800;
-  padding: 3px 9px;
+  padding: 3px 10px;
   border-radius: 6px;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   display: none;
 }
-.badge-admin.visible { display: inline-block; }
 
-.btn-manage {
-  background: var(--purple-dim);
-  border: 1.5px solid rgba(139,92,246,0.3);
-  color: #c4b5fd;
-  padding: 7px 13px;
+.badge-admin.visible {
+  display: inline-block;
+}
+
+/* Header action buttons */
+.header-action-btn {
+  display: none;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
   border-radius: 9px;
+  font-family: var(--font-body);
   font-size: 0.8rem;
   font-weight: 700;
   cursor: pointer;
   transition: var(--transition);
-  display: none;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--font-body);
+  border: 1.5px solid;
 }
-.btn-manage:hover { background: rgba(139,92,246,0.22); }
-.btn-manage.visible { display: flex; }
 
+.header-action-btn.visible {
+  display: flex;
+}
+
+.header-action-btn.purple {
+  background: var(--purple-dim);
+  border-color: rgba(139, 92, 246, 0.35);
+  color: #c4b5fd;
+}
+.header-action-btn.purple:hover {
+  background: rgba(139, 92, 246, 0.22);
+}
+
+.header-action-btn.orange {
+  background: var(--orange-dim);
+  border-color: rgba(249, 115, 22, 0.35);
+  color: #fdba74;
+}
+.header-action-btn.orange:hover {
+  background: rgba(249, 115, 22, 0.22);
+}
+
+/* User chip */
 .user-chip {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   background: var(--bg-3);
   border: 1.5px solid var(--border);
-  border-radius: 10px;
-  padding: 5px 10px 5px 5px;
+  border-radius: 11px;
+  padding: 5px 12px 5px 5px;
 }
 
 .user-avatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 7px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   background: linear-gradient(135deg, var(--accent), var(--purple));
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 800;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   color: #0c0e14;
   overflow: hidden;
   flex-shrink: 0;
 }
-.user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 
 .user-display-name {
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   font-weight: 700;
-  max-width: 110px;
+  max-width: 130px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+/* Sign-out button */
 .btn-signout {
   background: var(--red-dim);
-  border: 1.5px solid rgba(239,68,68,0.3);
+  border: 1.5px solid rgba(239, 68, 68, 0.3);
   color: #fca5a5;
-  padding: 7px 12px;
+  padding: 7px 13px;
   border-radius: 9px;
+  font-family: var(--font-body);
   font-size: 0.8rem;
   font-weight: 700;
   cursor: pointer;
   transition: var(--transition);
-  font-family: var(--font-body);
 }
-.btn-signout:hover { background: rgba(239,68,68,0.22); }
+
+.btn-signout:hover {
+  background: rgba(239, 68, 68, 0.22);
+}
 
 /* ============================================================
-   MAIN CONTENT AREA
+   APP BODY
    ============================================================ */
 .app-body {
-  max-width: 1240px;
+  max-width: 1260px;
   margin: 0 auto;
-  padding: 36px 28px 60px;
+  padding: 38px 30px 70px;
 }
 
 /* ============================================================
@@ -555,53 +716,60 @@ textarea.form-input { min-height: 110px; line-height: 1.6; }
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 16px;
-  margin-bottom: 36px;
+  margin-bottom: 38px;
 }
 
 .stat-card {
   background: var(--bg-2);
   border: 1px solid var(--border);
-  border-radius: var(--r-card);
-  padding: 20px 22px;
+  border-radius: var(--radius-card);
+  padding: 22px 24px;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 18px;
   transition: var(--transition);
+  cursor: default;
 }
-.stat-card:hover { border-color: var(--border-light); transform: translateY(-2px); box-shadow: var(--shadow); }
+
+.stat-card:hover {
+  border-color: var(--border-light);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow);
+}
 
 .stat-icon {
-  width: 46px;
-  height: 46px;
-  border-radius: 13px;
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 21px;
+  font-size: 22px;
   flex-shrink: 0;
 }
+
 .stat-icon.amber  { background: var(--accent-dim); }
 .stat-icon.purple { background: var(--purple-dim); }
 .stat-icon.green  { background: var(--green-dim); }
 .stat-icon.blue   { background: var(--blue-dim); }
 
-.stat-number {
+.stat-value {
   font-family: var(--font-mono);
-  font-size: 1.65rem;
+  font-size: 1.75rem;
   font-weight: 500;
   line-height: 1;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
 }
 
 .stat-label {
-  font-size: 0.78rem;
+  font-size: 0.79rem;
   color: var(--text-muted);
-  margin-top: 4px;
+  margin-top: 5px;
   font-weight: 600;
 }
 
 /* ============================================================
-   TOOLBAR (FILTER + SEARCH + ADD)
+   TOOLBAR — FILTERS + SEARCH + ADD BUTTON
    ============================================================ */
 .toolbar {
   display: flex;
@@ -615,25 +783,29 @@ textarea.form-input { min-height: 110px; line-height: 1.6; }
 .toolbar-filters {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   flex-wrap: wrap;
   flex: 1;
   min-width: 0;
 }
 
-.filter-label {
+.toolbar-filter-label {
   font-size: 0.75rem;
   font-weight: 800;
   color: var(--text-dim);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.09em;
   flex-shrink: 0;
 }
 
-.filter-chips { display: flex; gap: 7px; flex-wrap: wrap; }
+.filter-chips {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
 
-.chip {
-  padding: 5px 13px;
+.filter-chip {
+  padding: 5px 14px;
   border-radius: 20px;
   background: var(--bg-3);
   border: 1.5px solid var(--border);
@@ -644,42 +816,64 @@ textarea.form-input { min-height: 110px; line-height: 1.6; }
   transition: var(--transition);
   white-space: nowrap;
 }
-.chip:hover { border-color: var(--border-light); color: var(--text); }
-.chip.active {
+
+.filter-chip:hover {
+  border-color: var(--border-light);
+  color: var(--text);
+}
+
+.filter-chip.active {
   background: var(--accent-dim);
-  border-color: rgba(245,166,35,0.5);
+  border-color: rgba(245, 166, 35, 0.55);
   color: var(--accent);
 }
 
-.toolbar-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-
-.search-wrap {
+.toolbar-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 9px;
   background: var(--bg-2);
   border: 1.5px solid var(--border);
   border-radius: 10px;
-  padding: 8px 13px;
+  padding: 8px 14px;
   transition: var(--transition);
 }
-.search-wrap:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
-.search-wrap span { color: var(--text-muted); font-size: 14px; }
-.search-wrap input {
+
+.search-box:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.search-box-icon {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.search-box input {
   background: transparent;
   border: none;
   outline: none;
   color: var(--text);
   font-family: var(--font-body);
   font-size: 0.875rem;
-  width: 180px;
+  width: 190px;
 }
-.search-wrap input::placeholder { color: var(--text-dim); }
 
-.btn-new {
+.search-box input::placeholder {
+  color: var(--text-dim);
+}
+
+.btn-new-entry {
   background: var(--accent);
   color: #0c0e14;
-  padding: 10px 18px;
+  padding: 10px 20px;
   border-radius: 10px;
   border: none;
   font-family: var(--font-body);
@@ -692,7 +886,12 @@ textarea.form-input { min-height: 110px; line-height: 1.6; }
   gap: 7px;
   white-space: nowrap;
 }
-.btn-new:hover { background: var(--accent-h); transform: translateY(-1px); box-shadow: 0 4px 16px var(--accent-glow); }
+
+.btn-new-entry:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 18px var(--accent-glow);
+}
 
 /* ============================================================
    ENTRIES GRID
@@ -703,19 +902,33 @@ textarea.form-input { min-height: 110px; line-height: 1.6; }
   gap: 20px;
 }
 
+/* Empty state */
 .empty-state {
   grid-column: 1 / -1;
   text-align: center;
-  padding: 90px 24px 60px;
+  padding: 90px 24px 70px;
 }
-.empty-state-emoji { font-size: 64px; margin-bottom: 16px; }
+
+.empty-state-emoji {
+  font-size: 66px;
+  margin-bottom: 18px;
+  display: block;
+}
+
 .empty-state h3 {
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: 1.55rem;
   font-weight: 700;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
-.empty-state p { color: var(--text-muted); font-size: 0.9375rem; line-height: 1.6; }
+
+.empty-state p {
+  color: var(--text-muted);
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  max-width: 400px;
+  margin: 0 auto 24px;
+}
 
 /* ============================================================
    ENTRY CARD
@@ -723,87 +936,95 @@ textarea.form-input { min-height: 110px; line-height: 1.6; }
 .entry-card {
   background: var(--bg-2);
   border: 1px solid var(--border);
-  border-radius: var(--r-card);
+  border-radius: var(--radius-card);
   overflow: hidden;
   cursor: pointer;
   transition: var(--transition);
   display: flex;
   flex-direction: column;
+  position: relative;
 }
+
 .entry-card:hover {
   border-color: var(--border-light);
   transform: translateY(-5px);
   box-shadow: var(--shadow-lg);
 }
 
-.card-thumb {
+/* Thumbnail */
+.card-thumbnail {
   width: 100%;
-  height: 170px;
+  height: 172px;
   overflow: hidden;
   background: var(--bg-3);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  position: relative;
 }
-.card-thumb img {
+
+.card-thumbnail img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
+  transition: transform 0.35s ease;
 }
-.entry-card:hover .card-thumb img { transform: scale(1.04); }
+
+.entry-card:hover .card-thumbnail img {
+  transform: scale(1.05);
+}
 
 .card-no-image {
-  font-size: 40px;
-  color: var(--text-dim);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-}
-.card-no-image span {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
+  gap: 9px;
   color: var(--text-dim);
-  letter-spacing: 0.05em;
+  font-size: 40px;
 }
 
+.card-no-image-label {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+}
+
+/* Card body */
 .card-body {
-  padding: 16px 18px;
+  padding: 16px 18px 12px;
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 9px;
 }
 
-.card-header {
+.card-header-row {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 8px;
+  gap: 10px;
 }
 
 .card-title {
   font-family: var(--font-display);
-  font-size: 1rem;
+  font-size: 1.01rem;
   font-weight: 700;
-  line-height: 1.35;
+  line-height: 1.38;
   color: var(--text);
 }
 
-.card-date {
+.card-date-label {
   font-family: var(--font-mono);
   font-size: 0.68rem;
   color: var(--text-muted);
   white-space: nowrap;
-  padding-top: 2px;
+  padding-top: 3px;
   flex-shrink: 0;
 }
 
-.card-topic {
-  font-size: 0.8rem;
+.card-topic-row {
+  font-size: 0.81rem;
   color: var(--accent);
   font-weight: 700;
   display: flex;
@@ -811,10 +1032,10 @@ textarea.form-input { min-height: 110px; line-height: 1.6; }
   gap: 5px;
 }
 
-.card-desc {
-  font-size: 0.855rem;
+.card-description-preview {
+  font-size: 0.86rem;
   color: var(--text-muted);
-  line-height: 1.6;
+  line-height: 1.62;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -822,14 +1043,14 @@ textarea.form-input { min-height: 110px; line-height: 1.6; }
   flex: 1;
 }
 
-.card-tags {
+.card-tags-row {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
-  margin-top: 4px;
+  margin-top: 3px;
 }
 
-.mistake-tag {
+.mistake-type-badge {
   padding: 3px 9px;
   border-radius: 6px;
   font-size: 0.7rem;
@@ -840,14 +1061,15 @@ textarea.form-input { min-height: 110px; line-height: 1.6; }
   gap: 4px;
 }
 
-.card-actions {
+/* Card actions row */
+.card-actions-row {
   padding: 10px 14px;
   border-top: 1px solid var(--border);
   display: flex;
   gap: 8px;
 }
 
-.btn-card {
+.card-action-btn {
   flex: 1;
   padding: 7px 10px;
   border-radius: 8px;
@@ -864,19 +1086,34 @@ textarea.form-input { min-height: 110px; line-height: 1.6; }
   justify-content: center;
   gap: 5px;
 }
-.btn-card:hover { background: var(--bg-3); color: var(--text); border-color: var(--border-light); }
-.btn-card.edit:hover  { background: var(--accent-dim); border-color: rgba(245,166,35,0.4); color: var(--accent); }
-.btn-card.delete:hover { background: var(--red-dim); border-color: rgba(239,68,68,0.4); color: #fca5a5; }
+
+.card-action-btn:hover {
+  background: var(--bg-3);
+  color: var(--text);
+  border-color: var(--border-light);
+}
+
+.card-action-btn.edit:hover {
+  background: var(--accent-dim);
+  border-color: rgba(245, 166, 35, 0.45);
+  color: var(--accent);
+}
+
+.card-action-btn.delete:hover {
+  background: var(--red-dim);
+  border-color: rgba(239, 68, 68, 0.45);
+  color: #fca5a5;
+}
 
 /* ============================================================
-   MODALS
+   OVERLAYS (shared backdrop)
    ============================================================ */
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.7);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(0, 0, 0, 0.76);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   z-index: 500;
   display: flex;
   align-items: flex-start;
@@ -887,42 +1124,54 @@ textarea.form-input { min-height: 110px; line-height: 1.6; }
   pointer-events: none;
   transition: opacity 0.22s ease;
 }
-.overlay.open { opacity: 1; pointer-events: all; }
 
+.overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* ============================================================
+   MODAL
+   ============================================================ */
 .modal {
   background: var(--bg-2);
   border: 1px solid var(--border);
-  border-radius: 22px;
+  border-radius: var(--radius-lg);
   width: 100%;
-  max-width: 600px;
+  max-width: 610px;
   margin: auto;
   box-shadow: var(--shadow-lg);
-  transform: translateY(24px);
-  transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1);
+  transform: translateY(28px);
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
   position: relative;
 }
-.overlay.open .modal { transform: translateY(0); }
-.modal.wide { max-width: 680px; }
+
+.overlay.open .modal {
+  transform: translateY(0);
+}
+
+.modal.wide { max-width: 720px; }
+.modal.extra-wide { max-width: 840px; }
 
 .modal-header {
-  padding: 22px 26px 18px;
+  padding: 24px 28px 20px;
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 14px;
 }
 
 .modal-title {
   font-family: var(--font-display);
-  font-size: 1.3rem;
+  font-size: 1.35rem;
   font-weight: 700;
 }
 
-.btn-close {
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
+.modal-close-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   background: var(--bg-3);
   border: 1px solid var(--border);
   color: var(--text-muted);
@@ -934,17 +1183,24 @@ textarea.form-input { min-height: 110px; line-height: 1.6; }
   justify-content: center;
   flex-shrink: 0;
 }
-.btn-close:hover { background: var(--bg-4); color: var(--text); }
+
+.modal-close-btn:hover {
+  background: var(--bg-4);
+  color: var(--text);
+  border-color: var(--border-light);
+}
 
 .modal-body {
-  padding: 22px 26px;
+  padding: 24px 28px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 20px;
+  max-height: calc(92vh - 160px);
+  overflow-y: auto;
 }
 
 .modal-footer {
-  padding: 18px 26px;
+  padding: 18px 28px;
   border-top: 1px solid var(--border);
   display: flex;
   gap: 10px;
@@ -953,12 +1209,12 @@ textarea.form-input { min-height: 110px; line-height: 1.6; }
 }
 
 /* ============================================================
-   IMAGE UPLOAD AREA
+   IMAGE UPLOAD ZONE
    ============================================================ */
 .upload-zone {
   border: 2px dashed var(--border-light);
-  border-radius: 13px;
-  padding: 30px 24px;
+  border-radius: 14px;
+  padding: 32px 24px;
   text-align: center;
   cursor: pointer;
   transition: var(--transition);
@@ -966,10 +1222,13 @@ textarea.form-input { min-height: 110px; line-height: 1.6; }
   position: relative;
   overflow: hidden;
 }
-.upload-zone:hover, .upload-zone.dragover {
+
+.upload-zone:hover,
+.upload-zone.dragging-over {
   border-color: var(--accent);
   background: var(--accent-dim);
 }
+
 .upload-zone input[type="file"] {
   position: absolute;
   inset: 0;
@@ -978,34 +1237,52 @@ textarea.form-input { min-height: 110px; line-height: 1.6; }
   width: 100%;
   height: 100%;
 }
-.upload-zone-icon { font-size: 30px; margin-bottom: 8px; }
-.upload-zone-text { font-size: 0.875rem; color: var(--text-muted); font-weight: 600; }
-.upload-zone-sub  { font-size: 0.78rem; color: var(--text-dim); margin-top: 5px; }
 
-.preview-wrap {
+.upload-zone-icon {
+  font-size: 32px;
+  margin-bottom: 9px;
+}
+
+.upload-zone-text {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.upload-zone-subtext {
+  font-size: 0.79rem;
+  color: var(--text-dim);
+  margin-top: 6px;
+}
+
+/* Image preview */
+.image-preview-wrap {
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid var(--border);
   position: relative;
   display: none;
+  margin-top: 10px;
 }
-.preview-wrap img {
+
+.image-preview-wrap img {
   width: 100%;
   max-height: 280px;
   object-fit: contain;
   display: block;
   background: var(--bg-3);
 }
-.preview-btn-remove {
+
+.image-preview-remove-btn {
   position: absolute;
   top: 8px;
   right: 8px;
-  background: rgba(0,0,0,0.75);
+  background: rgba(0, 0, 0, 0.78);
   border: none;
   color: white;
-  width: 30px;
-  height: 30px;
-  border-radius: 7px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
   display: flex;
@@ -1013,179 +1290,235 @@ textarea.form-input { min-height: 110px; line-height: 1.6; }
   justify-content: center;
   transition: var(--transition);
 }
-.preview-btn-remove:hover { background: var(--red); }
 
-.upload-progress-wrap {
+.image-preview-remove-btn:hover {
+  background: var(--red);
+}
+
+/* Upload progress */
+.upload-progress-container {
   background: var(--bg-3);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 14px 16px;
+  border-radius: 11px;
+  padding: 14px 17px;
   display: none;
+  margin-top: 10px;
 }
-.upload-progress-wrap.show { display: block; }
+
+.upload-progress-container.visible {
+  display: block;
+}
+
 .upload-progress-label {
-  font-size: 0.8rem;
+  font-size: 0.81rem;
   color: var(--text-muted);
   font-weight: 600;
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  margin-bottom: 10px;
 }
-.upload-progress-bar-bg {
+
+.upload-progress-track {
   background: var(--bg-4);
-  border-radius: 4px;
-  height: 5px;
+  border-radius: 5px;
+  height: 6px;
   overflow: hidden;
 }
-.upload-progress-bar {
+
+.upload-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--accent), var(--accent-h));
-  border-radius: 4px;
-  transition: width 0.25s ease;
+  background: linear-gradient(90deg, var(--accent), var(--accent-hover));
+  border-radius: 5px;
+  transition: width 0.2s ease;
   width: 0%;
 }
 
 /* ============================================================
    MISTAKE TYPE MULTI-SELECT (in entry modal)
    ============================================================ */
-.mtype-grid {
+.mistake-type-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(158px, 1fr));
   gap: 9px;
 }
 
-.mtype-option {
-  padding: 9px 12px;
-  border-radius: 10px;
+.mistake-type-option {
+  padding: 10px 13px;
+  border-radius: 11px;
   border: 2px solid var(--border);
   background: var(--bg-3);
   cursor: pointer;
   transition: var(--transition);
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.8rem;
+  gap: 9px;
+  font-size: 0.81rem;
   font-weight: 700;
   color: var(--text-muted);
   user-select: none;
-  position: relative;
 }
-.mtype-option:hover { border-color: var(--border-light); color: var(--text); }
-.mtype-option.sel { color: var(--text); }
 
-.mtype-dot {
-  width: 10px;
-  height: 10px;
+.mistake-type-option:hover {
+  border-color: var(--border-light);
+  color: var(--text);
+  background: var(--bg-4);
+}
+
+.mistake-type-option.selected {
+  color: var(--text);
+}
+
+.mtype-color-dot {
+  width: 11px;
+  height: 11px;
   border-radius: 3px;
   flex-shrink: 0;
 }
-.mtype-label { flex: 1; line-height: 1.3; }
-.mtype-check { font-size: 13px; display: none; flex-shrink: 0; }
-.mtype-option.sel .mtype-check { display: block; }
+
+.mtype-label {
+  flex: 1;
+  line-height: 1.3;
+}
+
+.mtype-checkmark {
+  font-size: 13px;
+  display: none;
+  flex-shrink: 0;
+}
+
+.mistake-type-option.selected .mtype-checkmark {
+  display: block;
+}
 
 /* ============================================================
    VIEW ENTRY MODAL
    ============================================================ */
-.view-image {
+.view-entry-image {
   width: 100%;
-  max-height: 320px;
+  max-height: 340px;
   object-fit: contain;
-  border-radius: 12px;
+  border-radius: 13px;
   border: 1px solid var(--border);
   background: var(--bg-3);
   display: block;
+  cursor: zoom-in;
 }
 
-.view-meta {
+.view-entry-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 16px;
 }
 
 .view-meta-item {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.82rem;
+  gap: 7px;
+  font-size: 0.84rem;
   color: var(--text-muted);
 }
-.view-meta-item strong { color: var(--text); font-weight: 700; }
 
-.view-section-label {
-  font-size: 0.75rem;
+.view-meta-item strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.view-section-title {
+  font-size: 0.73rem;
   font-weight: 800;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.09em;
-  margin-bottom: 10px;
+  margin-bottom: 11px;
 }
 
-.view-desc {
+.view-description-box {
   font-size: 0.9375rem;
-  line-height: 1.75;
+  line-height: 1.8;
   color: var(--text-muted);
   background: var(--bg-3);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 14px 16px;
+  border-radius: 13px;
+  padding: 15px 18px;
   white-space: pre-wrap;
 }
 
-.view-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.view-tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
 
-.view-tag {
-  padding: 6px 14px;
-  border-radius: 8px;
-  font-size: 0.8rem;
+.view-mistake-tag {
+  padding: 7px 15px;
+  border-radius: 9px;
+  font-size: 0.81rem;
   font-weight: 800;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
 }
 
 /* ============================================================
-   ADMIN PANEL
+   ADMIN PANEL MODAL
    ============================================================ */
-.admin-section-heading {
+.admin-section-title {
   font-family: var(--font-display);
-  font-size: 1.05rem;
+  font-size: 1.08rem;
   font-weight: 700;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: var(--text);
+  gap: 9px;
 }
 
-.type-list { display: flex; flex-direction: column; gap: 9px; margin-bottom: 28px; }
+.admin-types-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 30px;
+}
 
-.type-row {
+.admin-type-row {
   background: var(--bg-3);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px 16px;
+  border-radius: 13px;
+  padding: 13px 17px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   transition: var(--transition);
 }
-.type-row:hover { border-color: var(--border-light); }
 
-.type-row-swatch {
-  width: 14px;
-  height: 14px;
+.admin-type-row:hover {
+  border-color: var(--border-light);
+}
+
+.admin-type-swatch {
+  width: 15px;
+  height: 15px;
   border-radius: 4px;
   flex-shrink: 0;
 }
 
-.type-row-info { flex: 1; min-width: 0; }
-.type-row-name { font-weight: 800; font-size: 0.9rem; }
-.type-row-desc { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
+.admin-type-info {
+  flex: 1;
+  min-width: 0;
+}
 
-.btn-icon-sm {
-  width: 30px;
-  height: 30px;
+.admin-type-name {
+  font-weight: 800;
+  font-size: 0.92rem;
+}
+
+.admin-type-desc {
+  font-size: 0.79rem;
+  color: var(--text-muted);
+  margin-top: 3px;
+  line-height: 1.4;
+}
+
+.btn-icon-small {
+  width: 32px;
+  height: 32px;
   border-radius: 8px;
   border: 1px solid var(--border);
   background: transparent;
@@ -1198,109 +1531,253 @@ textarea.form-input { min-height: 110px; line-height: 1.6; }
   transition: var(--transition);
   flex-shrink: 0;
 }
-.btn-icon-sm:hover { background: var(--bg-4); color: var(--text); }
-.btn-icon-sm.del:hover { background: var(--red-dim); border-color: rgba(239,68,68,0.4); color: #fca5a5; }
 
+.btn-icon-small:hover {
+  background: var(--bg-4);
+  color: var(--text);
+}
+
+.btn-icon-small.delete:hover {
+  background: var(--red-dim);
+  border-color: rgba(239, 68, 68, 0.45);
+  color: #fca5a5;
+}
+
+/* Add type panel */
 .add-type-panel {
   background: var(--bg-3);
   border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 20px;
-}
-.add-type-panel-title {
-  font-weight: 800;
-  font-size: 0.875rem;
-  margin-bottom: 16px;
-  color: var(--text);
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  border-radius: 15px;
+  padding: 22px;
 }
 
-.color-row {
+.add-type-panel-title {
+  font-weight: 800;
+  font-size: 0.9rem;
+  margin-bottom: 18px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 7px;
+  color: var(--text);
 }
+
+.color-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 input[type="color"] {
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 9px;
   cursor: pointer;
   background: none;
   padding: 2px;
 }
-.color-swatch {
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
+
+.color-preview-swatch {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
   flex-shrink: 0;
 }
 
 /* ============================================================
-   RESPONSIVE
+   FIREBASE SETUP GUIDE MODAL
    ============================================================ */
-@media (max-width: 680px) {
-  .app-header { padding: 0 16px; }
-  .app-body { padding: 20px 14px 50px; }
-  .auth-card { padding: 32px 22px; }
-  .stats-grid { grid-template-columns: 1fr 1fr; }
-  .toolbar { flex-direction: column; align-items: stretch; }
-  .toolbar-actions { justify-content: flex-end; }
-  .search-wrap input { width: 140px; }
-  .entries-grid { grid-template-columns: 1fr; }
-  .form-row { grid-template-columns: 1fr; }
-  .modal { margin: 0; }
-  .user-display-name { display: none; }
-  .btn-manage span { display: none; }
-  .mtype-grid { grid-template-columns: 1fr 1fr; }
+.setup-warning-banner {
+  background: rgba(249, 115, 22, 0.11);
+  border: 1px solid rgba(249, 115, 22, 0.32);
+  border-radius: 11px;
+  padding: 14px 18px;
+  font-size: 0.875rem;
+  color: #fdba74;
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  line-height: 1.55;
+  margin-bottom: 4px;
 }
 
-@media (max-width: 420px) {
+.setup-section {
+  margin-bottom: 6px;
+}
+
+.setup-section-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  font-size: 0.97rem;
+  margin-bottom: 14px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid var(--border);
+}
+
+.setup-badge {
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.setup-badge.firestore { background: var(--blue-dim); color: var(--blue); }
+.setup-badge.storage   { background: var(--orange-dim); color: var(--orange); }
+.setup-badge.auth      { background: var(--green-dim); color: var(--green); }
+
+.setup-step {
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  padding: 13px 17px;
+  margin-bottom: 10px;
+  font-size: 0.875rem;
+  line-height: 1.62;
+  color: var(--text-muted);
+}
+
+.setup-step strong { color: var(--text); }
+
+.setup-step a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.setup-step a:hover {
+  text-decoration: underline;
+}
+
+.code-block-wrapper {
+  position: relative;
+  margin-top: 2px;
+}
+
+.code-block {
+  background: #07080f;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  padding: 18px;
+  font-family: var(--font-mono);
+  font-size: 0.77rem;
+  line-height: 1.65;
+  color: #93bbf8;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.btn-copy-code {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 4px 11px;
+  border-radius: 7px;
+  font-size: 0.73rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: var(--font-body);
+}
+
+.btn-copy-code:hover {
+  color: var(--text);
+  background: var(--bg-4);
+}
+
+.btn-copy-code.copied {
+  color: var(--green);
+  border-color: rgba(16, 185, 129, 0.45);
+}
+
+/* ============================================================
+   CONFIRMATION DIALOG MODAL (replaces browser confirm())
+   ============================================================ */
+.confirm-message {
+  font-size: 0.9375rem;
+  color: var(--text-muted);
+  line-height: 1.65;
+}
+
+.confirm-message strong {
+  color: var(--text);
+}
+
+/* ============================================================
+   RESPONSIVE BREAKPOINTS
+   ============================================================ */
+@media (max-width: 720px) {
+  .app-header     { padding: 0 18px; }
+  .app-body       { padding: 22px 16px 55px; }
+  .auth-card      { padding: 34px 24px; }
+  .stats-grid     { grid-template-columns: 1fr 1fr; }
+  .toolbar        { flex-direction: column; align-items: stretch; }
+  .toolbar-actions { justify-content: flex-end; }
+  .search-box input { width: 130px; }
+  .entries-grid   { grid-template-columns: 1fr; }
+  .form-row       { grid-template-columns: 1fr; }
+  .mistake-type-grid { grid-template-columns: 1fr 1fr; }
+  .modal          { margin: 0; }
+  .user-display-name { display: none; }
+  .header-action-btn span { display: none; }
+}
+
+@media (max-width: 460px) {
   .stats-grid { grid-template-columns: 1fr; }
+  .auth-card  { padding: 28px 18px; }
 }
 </style>
 </head>
 <body>
 
-<!-- ╔══════════════════════════════════╗ -->
-<!-- ║         LOADING SCREEN           ║ -->
-<!-- ╚══════════════════════════════════╝ -->
+<!-- ═══════════════════════════════════════════
+     LOADING OVERLAY
+     ═══════════════════════════════════════════ -->
 <div id="loading-overlay">
   <div class="loading-logo">🔬</div>
   <div class="loading-spinner"></div>
   <div class="loading-label">Initialising SciJournal…</div>
 </div>
 
-<!-- Toast container -->
+<!-- Toast notification container -->
 <div id="toast-container"></div>
 
-<!-- ╔══════════════════════════════════╗ -->
-<!-- ║            AUTH PAGE             ║ -->
-<!-- ╚══════════════════════════════════╝ -->
+<!-- ═══════════════════════════════════════════
+     AUTH PAGE
+     ═══════════════════════════════════════════ -->
 <div id="auth-page">
   <div class="auth-wrap">
     <div class="auth-card">
 
+      <!-- Hero / branding -->
       <div class="auth-hero">
-        <div class="auth-icon">🔬</div>
+        <div class="auth-app-icon">🔬</div>
         <h1>SciJournal</h1>
         <p>Track your science mistakes.<br>Understand them. Overcome them.</p>
       </div>
 
+      <!-- Login / Register tabs -->
       <div class="auth-tabs">
-        <button class="auth-tab active" id="tab-login"    onclick="switchTab('login')">Sign In</button>
-        <button class="auth-tab"         id="tab-register" onclick="switchTab('register')">Register</button>
+        <button class="auth-tab active" id="tab-login"
+          onclick="switchAuthTab('login')">Sign In</button>
+        <button class="auth-tab" id="tab-register"
+          onclick="switchAuthTab('register')">Register</button>
       </div>
 
-      <div class="auth-error" id="auth-error">
-        <span>⚠️</span><span id="auth-error-msg"></span>
+      <!-- Error box -->
+      <div class="auth-error-box" id="auth-error-box">
+        <span>⚠️</span>
+        <span id="auth-error-text"></span>
       </div>
 
-      <!-- Google Button (shared) -->
-      <button class="btn-google" onclick="googleSignIn()">
-        <svg width="18" height="18" viewBox="0 0 24 24">
+      <!-- Google sign-in -->
+      <button class="btn-google" onclick="signInWithGoogle()">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
           <path fill="#4285f4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
           <path fill="#34a853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
           <path fill="#fbbc05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
@@ -1311,301 +1788,558 @@ input[type="color"] {
 
       <div class="auth-divider">or continue with email</div>
 
-      <!-- ── LOGIN FORM ── -->
+      <!-- ─── LOGIN FORM ─── -->
       <div id="login-form">
         <div class="form-group">
-          <label class="form-label">Email Address</label>
-          <input class="form-input" type="email" id="login-email" placeholder="you@example.com"
-            onkeydown="if(event.key==='Enter') emailSignIn()">
+          <label class="form-label" for="login-email">Email Address</label>
+          <input class="form-input" type="email" id="login-email"
+            placeholder="you@example.com"
+            onkeydown="if(event.key==='Enter') signInWithEmail()">
         </div>
         <div class="form-group">
-          <label class="form-label">Password</label>
-          <input class="form-input" type="password" id="login-pass" placeholder="Your password"
-            onkeydown="if(event.key==='Enter') emailSignIn()">
+          <label class="form-label" for="login-password">Password</label>
+          <input class="form-input" type="password" id="login-password"
+            placeholder="Your password"
+            onkeydown="if(event.key==='Enter') signInWithEmail()">
         </div>
-        <button class="btn btn-primary" style="width:100%;padding:13px" id="login-btn" onclick="emailSignIn()">
+        <button class="btn btn-primary" style="width:100%; padding:13px"
+          id="login-submit-btn" onclick="signInWithEmail()">
           Sign In
         </button>
       </div>
 
-      <!-- ── REGISTER FORM ── -->
+      <!-- ─── REGISTER FORM ─── -->
       <div id="register-form" style="display:none">
         <div class="form-group">
-          <label class="form-label">Your Name</label>
-          <input class="form-input" type="text" id="reg-name" placeholder="e.g. Kai Wei"
-            onkeydown="if(event.key==='Enter') emailRegister()">
+          <label class="form-label" for="reg-name">Your Name</label>
+          <input class="form-input" type="text" id="reg-name"
+            placeholder="e.g. Kai Wei"
+            onkeydown="if(event.key==='Enter') registerWithEmail()">
         </div>
         <div class="form-group">
-          <label class="form-label">Email Address</label>
-          <input class="form-input" type="email" id="reg-email" placeholder="you@example.com"
-            onkeydown="if(event.key==='Enter') emailRegister()">
+          <label class="form-label" for="reg-email">Email Address</label>
+          <input class="form-input" type="email" id="reg-email"
+            placeholder="you@example.com"
+            onkeydown="if(event.key==='Enter') registerWithEmail()">
         </div>
         <div class="form-group">
-          <label class="form-label">Password <span style="color:var(--text-dim)">(min 6 chars)</span></label>
-          <input class="form-input" type="password" id="reg-pass" placeholder="Choose a password"
-            onkeydown="if(event.key==='Enter') emailRegister()">
+          <label class="form-label" for="reg-password">
+            Password
+            <span class="form-label-note"> (minimum 6 characters)</span>
+          </label>
+          <input class="form-input" type="password" id="reg-password"
+            placeholder="Choose a secure password"
+            onkeydown="if(event.key==='Enter') registerWithEmail()">
         </div>
-        <button class="btn btn-primary" style="width:100%;padding:13px" id="reg-btn" onclick="emailRegister()">
+        <button class="btn btn-primary" style="width:100%; padding:13px"
+          id="register-submit-btn" onclick="registerWithEmail()">
           Create Account
         </button>
       </div>
 
-    </div>
-  </div>
-</div>
+    </div><!-- /.auth-card -->
+  </div><!-- /.auth-wrap -->
+</div><!-- /#auth-page -->
 
-<!-- ╔══════════════════════════════════╗ -->
-<!-- ║            MAIN APP              ║ -->
-<!-- ╚══════════════════════════════════╝ -->
+<!-- ═══════════════════════════════════════════
+     MAIN APPLICATION
+     ═══════════════════════════════════════════ -->
 <div id="main-app">
 
-  <!-- ── HEADER ── -->
+  <!-- ─── HEADER ─── -->
   <header class="app-header">
     <div class="header-brand">
       <div class="header-brand-icon">🔬</div>
-      <h1>SciJournal</h1>
+      <span class="header-brand-title">SciJournal</span>
     </div>
+
     <div class="header-right">
       <span class="badge-admin" id="badge-admin">Admin</span>
-      <button class="btn-manage" id="btn-manage" onclick="openAdminModal()">
+
+      <!-- Setup guide button — always visible to help with first-time setup -->
+      <button class="header-action-btn orange visible" id="btn-setup-guide"
+        onclick="openSetupModal()">
+        🔧 <span>Setup Guide</span>
+      </button>
+
+      <!-- Manage types — admin only -->
+      <button class="header-action-btn purple" id="btn-manage-types"
+        onclick="openAdminModal()">
         ⚙️ <span>Manage Types</span>
       </button>
+
       <div class="user-chip">
-        <div class="user-avatar" id="hdr-avatar">?</div>
-        <span class="user-display-name" id="hdr-name">—</span>
+        <div class="user-avatar" id="header-avatar">?</div>
+        <span class="user-display-name" id="header-username">—</span>
       </div>
+
       <button class="btn-signout" onclick="doSignOut()">Sign Out</button>
     </div>
   </header>
 
-  <!-- ── MAIN BODY ── -->
+  <!-- ─── MAIN CONTENT ─── -->
   <div class="app-body">
 
-    <!-- Stats -->
-    <div class="stats-grid" id="stats-grid">
+    <!-- Stats dashboard -->
+    <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-icon amber">📓</div>
         <div>
-          <div class="stat-number" id="stat-total">0</div>
+          <div class="stat-value" id="stat-total">0</div>
           <div class="stat-label">Total Entries</div>
         </div>
       </div>
       <div class="stat-card">
         <div class="stat-icon purple">🗓</div>
         <div>
-          <div class="stat-number" id="stat-week">0</div>
+          <div class="stat-value" id="stat-this-week">0</div>
           <div class="stat-label">This Week</div>
         </div>
       </div>
       <div class="stat-card">
         <div class="stat-icon green">📸</div>
         <div>
-          <div class="stat-number" id="stat-images">0</div>
+          <div class="stat-value" id="stat-with-images">0</div>
           <div class="stat-label">With Images</div>
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon blue">🏆</div>
+        <div class="stat-icon blue">🏷</div>
         <div>
-          <div class="stat-number" id="stat-top" style="font-size:0.85rem;line-height:1.25">—</div>
-          <div class="stat-label">Top Mistake</div>
+          <div class="stat-value" id="stat-top-mistake"
+            style="font-size:0.8rem; line-height:1.25">—</div>
+          <div class="stat-label">Top Mistake Type</div>
         </div>
       </div>
     </div>
 
-    <!-- Toolbar -->
+    <!-- Toolbar: filter chips + search + new button -->
     <div class="toolbar">
       <div class="toolbar-filters">
-        <span class="filter-label">Filter:</span>
-        <div class="filter-chips" id="filter-chips">
-          <button class="chip active" data-id="all" onclick="applyFilter('all', this)">All</button>
+        <span class="toolbar-filter-label">Filter:</span>
+        <div class="filter-chips" id="filter-chips-container">
+          <button class="filter-chip active" data-filter-id="all"
+            onclick="applyFilter('all', this)">All</button>
         </div>
       </div>
+
       <div class="toolbar-actions">
-        <div class="search-wrap">
-          <span>🔍</span>
-          <input type="text" placeholder="Search entries…" id="search-inp" oninput="renderCards()">
+        <div class="search-box">
+          <span class="search-box-icon">🔍</span>
+          <input type="text" id="search-input"
+            placeholder="Search entries…"
+            oninput="renderEntryCards()">
         </div>
-        <button class="btn-new" onclick="openEntryModal(null)">＋ New Entry</button>
+        <button class="btn-new-entry" onclick="openEntryModal(null)">
+          ＋ New Entry
+        </button>
       </div>
     </div>
 
     <!-- Entries grid -->
-    <div class="entries-grid" id="entries-grid"></div>
+    <div class="entries-grid" id="entries-grid">
+      <div class="empty-state">
+        <span class="empty-state-emoji">⏳</span>
+        <h3>Connecting to Firebase…</h3>
+        <p>Setting up your journal.</p>
+      </div>
+    </div>
 
-  </div>
-</div>
+  </div><!-- /.app-body -->
+</div><!-- /#main-app -->
 
-<!-- ╔══════════════════════════════════╗ -->
-<!-- ║      ADD / EDIT ENTRY MODAL      ║ -->
-<!-- ╚══════════════════════════════════╝ -->
-<div class="overlay" id="ov-entry" onclick="overlayClose(event,'ov-entry')">
+<!-- ═══════════════════════════════════════════
+     ADD / EDIT ENTRY MODAL
+     ═══════════════════════════════════════════ -->
+<div class="overlay" id="overlay-entry" onclick="overlayBackdropClick(event, 'overlay-entry')">
   <div class="modal" id="modal-entry">
+
     <div class="modal-header">
       <h2 class="modal-title" id="entry-modal-title">📝 New Entry</h2>
-      <button class="btn-close" onclick="closeOverlay('ov-entry')">✕</button>
+      <button class="modal-close-btn" onclick="closeOverlay('overlay-entry')"
+        aria-label="Close modal">✕</button>
     </div>
+
     <div class="modal-body">
 
       <!-- Title -->
       <div class="form-group">
-        <label class="form-label">Entry Title *</label>
-        <input class="form-input" type="text" id="f-title" placeholder="e.g. Photosynthesis Test — Q4 mistake">
+        <label class="form-label" for="field-title">Entry Title *</label>
+        <input class="form-input" type="text" id="field-title"
+          placeholder="e.g. Photosynthesis Quiz — Q4 mistake">
       </div>
 
-      <!-- Topic + Date -->
+      <!-- Topic + Date (two columns) -->
       <div class="form-row">
         <div class="form-group" style="margin-bottom:0">
-          <label class="form-label">Topic / Chapter</label>
-          <input class="form-input" type="text" id="f-topic" placeholder="e.g. Ch 3 – Photosynthesis">
+          <label class="form-label" for="field-topic">Topic / Chapter</label>
+          <input class="form-input" type="text" id="field-topic"
+            placeholder="e.g. Ch 3 – Photosynthesis">
         </div>
         <div class="form-group" style="margin-bottom:0">
-          <label class="form-label">Date of Assessment</label>
-          <input class="form-input" type="date" id="f-date">
+          <label class="form-label" for="field-date">Date of Assessment</label>
+          <input class="form-input" type="date" id="field-date">
         </div>
       </div>
 
-      <!-- Mistake types -->
+      <!-- Mistake type selector -->
       <div class="form-group">
         <label class="form-label">Mistake Types Identified *</label>
-        <div class="mtype-grid" id="mtype-selector"></div>
+        <div class="mistake-type-grid" id="mistake-type-selector"></div>
       </div>
 
-      <!-- Description -->
+      <!-- Reflection / correct answer textarea -->
       <div class="form-group">
-        <label class="form-label">What went wrong? What is the correct answer?</label>
-        <textarea class="form-input" id="f-desc"
-          placeholder="Describe your mistake clearly and write the correct explanation or answer…"></textarea>
+        <label class="form-label" for="field-description">
+          What went wrong? What is the correct answer?
+        </label>
+        <textarea class="form-input" id="field-description"
+          placeholder="Describe your mistake clearly. Write the correct explanation or answer here. What will you do differently next time?"></textarea>
       </div>
 
       <!-- Image upload -->
       <div class="form-group" style="margin-bottom:0">
-        <label class="form-label">Attach Image <span style="color:var(--text-dim)">(stored permanently)</span></label>
-        <div class="upload-zone" id="upload-zone"
-          ondragover="dzDragOver(event)" ondragleave="dzDragLeave(event)" ondrop="dzDrop(event)">
-          <input type="file" accept="image/*" id="file-inp" onchange="fileSelected(event)">
+        <label class="form-label">
+          Attach an Image
+          <span class="form-label-note"> — saved permanently to your account</span>
+        </label>
+
+        <!-- Drop zone -->
+        <div class="upload-zone" id="upload-drop-zone"
+          ondragover="handleDragOver(event)"
+          ondragleave="handleDragLeave()"
+          ondrop="handleDrop(event)">
+          <input type="file" accept="image/*" id="file-input"
+            onchange="onFileInputChange(event)">
           <div class="upload-zone-icon">📎</div>
-          <div class="upload-zone-text">Drop an image here or click to browse</div>
-          <div class="upload-zone-sub">PNG, JPG, WEBP · Max 10 MB · Saved to your account forever</div>
+          <div class="upload-zone-text">Drop an image here, or click to browse</div>
+          <div class="upload-zone-subtext">PNG · JPG · WEBP · GIF &nbsp;|&nbsp; Max 10 MB &nbsp;|&nbsp; Stored forever in Firebase</div>
         </div>
-        <div class="preview-wrap" id="preview-wrap" style="margin-top:10px">
-          <img id="preview-img" src="" alt="Preview">
-          <button class="preview-btn-remove" onclick="clearImage()">✕</button>
+
+        <!-- Preview -->
+        <div class="image-preview-wrap" id="image-preview-wrap">
+          <img id="image-preview-img" src="" alt="Preview of attached image">
+          <button class="image-preview-remove-btn" onclick="clearImageSelection()"
+            title="Remove image">✕</button>
         </div>
-        <div class="upload-progress-wrap" id="up-progress" style="margin-top:10px">
-          <div class="upload-progress-label">
-            <span id="up-label">Uploading…</span>
-          </div>
-          <div class="upload-progress-bar-bg">
-            <div class="upload-progress-bar" id="up-bar"></div>
+
+        <!-- Upload progress bar -->
+        <div class="upload-progress-container" id="upload-progress-container">
+          <div class="upload-progress-label" id="upload-progress-label">Uploading…</div>
+          <div class="upload-progress-track">
+            <div class="upload-progress-fill" id="upload-progress-fill"></div>
           </div>
         </div>
       </div>
 
-    </div>
+    </div><!-- /.modal-body -->
+
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeOverlay('ov-entry')">Cancel</button>
-      <button class="btn btn-primary" style="padding:11px 28px" id="save-btn" onclick="saveEntry()">
+      <button class="btn btn-secondary" onclick="closeOverlay('overlay-entry')">
+        Cancel
+      </button>
+      <button class="btn btn-primary" id="save-entry-btn"
+        style="min-width: 150px" onclick="saveEntryToFirestore()">
         💾 Save Entry
       </button>
     </div>
-  </div>
-</div>
 
-<!-- ╔══════════════════════════════════╗ -->
-<!-- ║         VIEW ENTRY MODAL         ║ -->
-<!-- ╚══════════════════════════════════╝ -->
-<div class="overlay" id="ov-view" onclick="overlayClose(event,'ov-view')">
+  </div><!-- /#modal-entry -->
+</div><!-- /#overlay-entry -->
+
+<!-- ═══════════════════════════════════════════
+     VIEW ENTRY MODAL
+     ═══════════════════════════════════════════ -->
+<div class="overlay" id="overlay-view" onclick="overlayBackdropClick(event, 'overlay-view')">
   <div class="modal" id="modal-view">
+
     <div class="modal-header">
-      <h2 class="modal-title" id="view-title">—</h2>
-      <button class="btn-close" onclick="closeOverlay('ov-view')">✕</button>
+      <h2 class="modal-title" id="view-entry-title">—</h2>
+      <button class="modal-close-btn" onclick="closeOverlay('overlay-view')"
+        aria-label="Close">✕</button>
     </div>
-    <div class="modal-body" id="view-body"></div>
+
+    <div class="modal-body" id="view-entry-body">
+      <!-- Populated dynamically -->
+    </div>
+
     <div class="modal-footer">
-      <button class="btn btn-danger"    id="view-del-btn"  onclick="deleteFromView()">🗑 Delete</button>
-      <button class="btn btn-secondary" id="view-edit-btn" onclick="editFromView()">✏️ Edit</button>
-      <button class="btn btn-secondary" onclick="closeOverlay('ov-view')">Close</button>
+      <button class="btn btn-danger"    onclick="deleteEntryFromViewModal()">🗑 Delete</button>
+      <button class="btn btn-secondary" onclick="editEntryFromViewModal()">✏️ Edit</button>
+      <button class="btn btn-secondary" onclick="closeOverlay('overlay-view')">Close</button>
     </div>
+
   </div>
 </div>
 
-<!-- ╔══════════════════════════════════╗ -->
-<!-- ║          ADMIN PANEL MODAL       ║ -->
-<!-- ╚══════════════════════════════════╝ -->
-<div class="overlay" id="ov-admin" onclick="overlayClose(event,'ov-admin')">
+<!-- ═══════════════════════════════════════════
+     ADMIN — MANAGE MISTAKE TYPES MODAL
+     ═══════════════════════════════════════════ -->
+<div class="overlay" id="overlay-admin" onclick="overlayBackdropClick(event, 'overlay-admin')">
   <div class="modal wide" id="modal-admin">
+
     <div class="modal-header">
       <h2 class="modal-title">⚙️ Manage Mistake Types</h2>
-      <button class="btn-close" onclick="closeOverlay('ov-admin')">✕</button>
+      <button class="modal-close-btn" onclick="closeOverlay('overlay-admin')">✕</button>
     </div>
+
     <div class="modal-body">
 
-      <!-- Existing types -->
+      <!-- Current types list -->
       <div>
-        <div class="admin-section-heading">📋 Current Mistake Types</div>
-        <div class="type-list" id="admin-type-list"></div>
+        <div class="admin-section-title">📋 Current Mistake Types</div>
+        <div class="admin-types-list" id="admin-types-list">
+          <!-- Populated dynamically -->
+        </div>
       </div>
 
-      <!-- Add new type -->
+      <!-- Add new type form -->
       <div class="add-type-panel">
-        <div class="add-type-panel-title">➕ Add New Mistake Type</div>
+        <div class="add-type-panel-title">➕ Add a New Mistake Type</div>
 
-        <div class="form-row" style="margin-bottom:12px">
+        <div class="form-row" style="margin-bottom:14px">
           <div class="form-group" style="margin-bottom:0">
-            <label class="form-label">Name *</label>
-            <input class="form-input" type="text" id="new-name" placeholder="e.g. Wrong Units">
+            <label class="form-label" for="new-type-name">Name *</label>
+            <input class="form-input" type="text" id="new-type-name"
+              placeholder="e.g. Wrong Units"
+              onkeydown="if(event.key==='Enter') adminAddMistakeType()">
           </div>
           <div class="form-group" style="margin-bottom:0">
-            <label class="form-label">Icon (emoji)</label>
-            <input class="form-input" type="text" id="new-icon" placeholder="📐" maxlength="2"
-              style="font-size:1.2rem;text-align:center">
+            <label class="form-label" for="new-type-icon">Icon (emoji)</label>
+            <input class="form-input" type="text" id="new-type-icon"
+              placeholder="📐" maxlength="2"
+              style="font-size:1.15rem; text-align:center">
           </div>
         </div>
 
         <div class="form-group">
-          <label class="form-label">Description</label>
-          <input class="form-input" type="text" id="new-desc" placeholder="Brief description of this mistake type">
+          <label class="form-label" for="new-type-desc">
+            Description
+            <span class="form-label-note"> (optional)</span>
+          </label>
+          <input class="form-input" type="text" id="new-type-desc"
+            placeholder="Brief description shown on the type option">
         </div>
 
-        <div class="form-group" style="margin-bottom:16px">
+        <div class="form-group" style="margin-bottom:18px">
           <label class="form-label">Colour</label>
-          <div class="color-row">
-            <input type="color" id="new-color" value="#f59e0b" oninput="syncColorSwatch()">
-            <div class="color-swatch" id="color-swatch" style="background:#f59e0b"></div>
-            <span style="font-size:0.8rem;color:var(--text-muted)">Pick badge colour</span>
+          <div class="color-picker-row">
+            <input type="color" id="new-type-color" value="#f59e0b"
+              oninput="syncColorPickerSwatch()">
+            <div class="color-preview-swatch" id="color-preview-swatch"
+              style="background:#f59e0b"></div>
+            <span style="font-size:0.82rem; color:var(--text-muted)">
+              Pick the badge colour for this mistake type
+            </span>
           </div>
         </div>
 
-        <button class="btn btn-primary" style="padding:11px 22px" onclick="adminAddType()">
+        <button class="btn btn-primary" onclick="adminAddMistakeType()">
           ➕ Add Mistake Type
         </button>
-      </div>
 
-    </div>
+      </div><!-- /.add-type-panel -->
+    </div><!-- /.modal-body -->
+
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeOverlay('ov-admin')">Done</button>
+      <button class="btn btn-secondary" onclick="closeOverlay('overlay-admin')">Done</button>
     </div>
+
   </div>
 </div>
 
-<!-- ╔══════════════════════════════════╗ -->
-<!-- ║          JAVASCRIPT              ║ -->
-<!-- ╚══════════════════════════════════╝ -->
+<!-- ═══════════════════════════════════════════
+     FIREBASE SETUP GUIDE MODAL
+     ═══════════════════════════════════════════ -->
+<div class="overlay" id="overlay-setup" onclick="overlayBackdropClick(event, 'overlay-setup')">
+  <div class="modal extra-wide" id="modal-setup">
+
+    <div class="modal-header">
+      <h2 class="modal-title">🔧 Firebase Setup Guide</h2>
+      <button class="modal-close-btn" onclick="closeOverlay('overlay-setup')">✕</button>
+    </div>
+
+    <div class="modal-body">
+
+      <div class="setup-warning-banner">
+        ⚠️
+        <span>
+          You <strong>must</strong> apply all three rule sets below in your Firebase Console
+          before entries and images will save correctly. This is a <strong>one-time setup</strong>
+          that takes about 3 minutes.
+        </span>
+      </div>
+
+      <!-- ── STEP 1: Firestore Rules ── -->
+      <div class="setup-section">
+        <div class="setup-section-heading">
+          <span class="setup-badge firestore">Step 1</span>
+          Firestore Database Security Rules
+        </div>
+
+        <div class="setup-step">
+          1. Open
+          <a href="https://console.firebase.google.com/project/mathgen--app/firestore/rules"
+            target="_blank" rel="noopener">
+            Firebase Console → Firestore Database → Rules tab
+          </a>
+        </div>
+
+        <div class="setup-step">
+          2. <strong>Select all existing text and delete it.</strong>
+          Paste the code below exactly, then click <strong>Publish</strong>.
+        </div>
+
+        <div class="code-block-wrapper">
+          <pre class="code-block" id="firestore-rules-code">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── USER DOCUMENTS ──────────────────────────────────────
+    // Each user can only read and write their own user document.
+    match /users/{userId} {
+      allow read, write: if request.auth != null
+                         && request.auth.uid == userId;
+    }
+
+    // ── JOURNAL ENTRIES ─────────────────────────────────────
+    // Authenticated users can only access entries they own.
+    // IMPORTANT: 'create' uses request.resource (the NEW doc).
+    //            'read/update/delete' use resource (existing doc).
+    match /entries/{entryId} {
+      allow read:   if request.auth != null
+                    && resource.data.userId == request.auth.uid;
+
+      allow create: if request.auth != null
+                    && request.resource.data.userId == request.auth.uid;
+
+      allow update: if request.auth != null
+                    && resource.data.userId == request.auth.uid;
+
+      allow delete: if request.auth != null
+                    && resource.data.userId == request.auth.uid;
+    }
+
+    // ── MISTAKE TYPES ────────────────────────────────────────
+    // Any signed-in user can read mistake types.
+    // Only the admin email can create, update, or delete them.
+    match /mistakeTypes/{typeId} {
+      allow read:  if request.auth != null;
+      allow write: if request.auth != null
+                   && request.auth.token.email == 'chungzhikai@gmail.com';
+    }
+  }
+}</pre>
+          <button class="btn-copy-code" onclick="copyCodeBlock('firestore-rules-code', this)">
+            Copy
+          </button>
+        </div>
+      </div>
+
+      <!-- ── STEP 2: Storage Rules ── -->
+      <div class="setup-section">
+        <div class="setup-section-heading">
+          <span class="setup-badge storage">Step 2</span>
+          Firebase Storage Security Rules
+        </div>
+
+        <div class="setup-step">
+          1. Open
+          <a href="https://console.firebase.google.com/project/mathgen--app/storage/rules"
+            target="_blank" rel="noopener">
+            Firebase Console → Storage → Rules tab
+          </a>
+        </div>
+
+        <div class="setup-step">
+          2. <strong>Select all existing text and delete it.</strong>
+          Paste the code below exactly, then click <strong>Publish</strong>.
+        </div>
+
+        <div class="code-block-wrapper">
+          <pre class="code-block" id="storage-rules-code">rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Images are stored at the path:
+    //   journal_images/{userId}/{filename}
+    //
+    // Each authenticated user can only read and write
+    // files inside their own userId folder.
+    // Write is further restricted to image files under 10 MB.
+
+    match /journal_images/{userId}/{allPaths=**} {
+      allow read:  if request.auth != null
+                   && request.auth.uid == userId;
+
+      allow write: if request.auth != null
+                   && request.auth.uid == userId
+                   && request.resource.size < 10 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+  }
+}</pre>
+          <button class="btn-copy-code" onclick="copyCodeBlock('storage-rules-code', this)">
+            Copy
+          </button>
+        </div>
+      </div>
+
+      <!-- ── STEP 3: Auth Providers ── -->
+      <div class="setup-section">
+        <div class="setup-section-heading">
+          <span class="setup-badge auth">Step 3</span>
+          Enable Authentication Providers
+        </div>
+
+        <div class="setup-step">
+          1. Open
+          <a href="https://console.firebase.google.com/project/mathgen--app/authentication/providers"
+            target="_blank" rel="noopener">
+            Firebase Console → Authentication → Sign-in method
+          </a>
+        </div>
+
+        <div class="setup-step">
+          2. Enable the <strong>Google</strong> provider and the <strong>Email/Password</strong> provider.
+        </div>
+
+        <div class="setup-step">
+          3. Under <strong>Authorized domains</strong> on the same page, make sure the domain
+          where you serve this HTML file is listed. For local testing, add
+          <code style="background:var(--bg-4); padding:2px 7px; border-radius:4px;
+            font-family:var(--font-mono); font-size:0.8em">localhost</code>.
+        </div>
+      </div>
+
+    </div><!-- /.modal-body -->
+
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="closeOverlay('overlay-setup')">
+        Got it — close
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     JAVASCRIPT
+     ═══════════════════════════════════════════ -->
 <script>
 'use strict';
 
-// ============================================================
-// FIREBASE INITIALISATION
-// ============================================================
+/* ═══════════════════════════════════════════════════════════
+   FIREBASE CONFIGURATION & INITIALISATION
+   ═══════════════════════════════════════════════════════════ */
 const firebaseConfig = {
-  apiKey:            "AIzaSyAUSI3Uh28IeqASEp0JhH4QPaVt-O3meBo",
-  authDomain:        "mathgen--app.firebaseapp.com",
-  projectId:         "mathgen--app",
-  storageBucket:     "mathgen--app.firebasestorage.app",
-  messagingSenderId: "165654161198",
-  appId:             "1:165654161198:web:16c8bd60eb3a2aa7edbcbf",
-  measurementId:     "G-0MWZFG211D"
+  apiKey:            'AIzaSyAUSI3Uh28IeqASEp0JhH4QPaVt-O3meBo',
+  authDomain:        'mathgen--app.firebaseapp.com',
+  projectId:         'mathgen--app',
+  storageBucket:     'mathgen--app.firebasestorage.app',
+  messagingSenderId: '165654161198',
+  appId:             '1:165654161198:web:16c8bd60eb3a2aa7edbcbf',
+  measurementId:     'G-0MWZFG211D',
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -1614,855 +2348,1260 @@ const auth    = firebase.auth();
 const db      = firebase.firestore();
 const storage = firebase.storage();
 
-// ============================================================
-// CONSTANTS
-// ============================================================
+// Enable multi-tab offline persistence so entries survive brief disconnects
+db.enablePersistence({ synchronizeTabs: true })
+  .then(() => console.log('[SciJournal] Offline persistence enabled.'))
+  .catch(err => console.warn('[SciJournal] Persistence unavailable:', err.code));
+
+/* ═══════════════════════════════════════════════════════════
+   CONSTANTS
+   ═══════════════════════════════════════════════════════════ */
 const ADMIN_EMAIL = 'chungzhikai@gmail.com';
 
-const SEED_TYPES = [
-  { name: 'Lack of Keywords',         color: '#ef4444', icon: '🔑', description: 'Missing important scientific keywords in the answer',                           order: 1 },
-  { name: 'Wrong Concept Identified', color: '#f97316', icon: '🧪', description: 'Identified the wrong scientific concept or principle',                          order: 2 },
-  { name: 'Lack of Comparison',       color: '#eab308', icon: '⚖️', description: 'Failed to compare between two or more items or scenarios',                     order: 3 },
-  { name: 'Lack of Evidence',         color: '#22c55e', icon: '🔬', description: 'Answer lacks supporting evidence, data, or examples',                           order: 4 },
-  { name: 'Unclear Language',         color: '#3b82f6', icon: '💬', description: 'Language used is vague, ambiguous, or scientifically imprecise',                order: 5 },
+// Default mistake types seeded on first run
+const DEFAULT_MISTAKE_TYPES = [
+  {
+    name:        'Lack of Keywords',
+    icon:        '🔑',
+    color:       '#ef4444',
+    description: 'Missing important scientific keywords required in the answer.',
+    order:       1,
+  },
+  {
+    name:        'Wrong Concept Identified',
+    icon:        '🧪',
+    color:       '#f97316',
+    description: 'Applied the wrong scientific concept or principle to the question.',
+    order:       2,
+  },
+  {
+    name:        'Lack of Comparison',
+    icon:        '⚖️',
+    color:       '#eab308',
+    description: 'Failed to compare between two or more items, processes, or scenarios.',
+    order:       3,
+  },
+  {
+    name:        'Lack of Evidence',
+    icon:        '🔬',
+    color:       '#22c55e',
+    description: 'Answer is missing supporting evidence, data, observations, or examples.',
+    order:       4,
+  },
+  {
+    name:        'Unclear Language',
+    icon:        '💬',
+    color:       '#3b82f6',
+    description: 'Language used is vague, ambiguous, or scientifically imprecise.',
+    order:       5,
+  },
 ];
 
-// ============================================================
-// APP STATE
-// ============================================================
-let currentUser   = null;
-let isAdmin       = false;
-let allEntries    = [];
-let mistakeTypes  = [];
-let currentFilter = 'all';
-let selTypes      = new Set();     // selected mistake type IDs in entry modal
-let editingId     = null;          // entry ID being edited (null = new)
-let viewingId     = null;          // entry ID being viewed
-let pendingFile   = null;          // File object awaiting upload
-let uploadedURL   = null;          // Firebase Storage download URL (persisted)
-let unsub         = null;          // Firestore onSnapshot unsubscriber
+/* ═══════════════════════════════════════════════════════════
+   APPLICATION STATE
+   ═══════════════════════════════════════════════════════════ */
+let currentUser         = null;     // Firebase User object
+let isAdmin             = false;    // Whether current user is admin
+let allEntries          = [];       // Local cache — sorted newest first
+let allMistakeTypes     = [];       // Local cache — sorted by order
+let activeFilterId      = 'all';   // Currently applied filter chip
+let selectedTypeIds     = new Set(); // Type IDs selected in the entry form
+let currentEditingId    = null;     // Entry doc ID being edited (null = new)
+let currentViewingId    = null;     // Entry doc ID being viewed
+let pendingUploadFile   = null;     // File object awaiting upload
+let confirmedImageURL   = null;     // Firebase Storage download URL
+let pendingBlobURL      = null;     // Temporary blob URL for preview
+let unsubscribeEntries  = null;     // Firestore listener unsub function
+let unsubscribeTypes    = null;     // Firestore listener unsub function
 
-// ============================================================
-// AUTH STATE LISTENER
-// ============================================================
+/* ═══════════════════════════════════════════════════════════
+   AUTH STATE LISTENER — app entry point
+   ═══════════════════════════════════════════════════════════ */
 auth.onAuthStateChanged(async (user) => {
-  document.getElementById('loading-overlay').style.display = 'none';
+  dismissLoadingOverlay();
 
   if (user) {
     currentUser = user;
-    await bootstrapUser(user);
-    renderApp();
+    isAdmin     = (user.email === ADMIN_EMAIL);
+
+    try {
+      await bootstrapNewUser(user);
+    } catch (err) {
+      // Bootstrap failures (usually rules not yet set) should not block the app
+      console.warn('[SciJournal] Bootstrap error:', err.code, err.message);
+    }
+
+    showMainApp();
   } else {
     currentUser = null;
     isAdmin     = false;
-    if (unsub) { unsub(); unsub = null; }
-    showAuth();
+    tearDownSubscriptions();
+    showAuthPage();
   }
 });
 
-// ============================================================
-// BOOTSTRAP: user doc + seed mistake types
-// ============================================================
-async function bootstrapUser(user) {
-  // Ensure user document exists in Firestore
-  const userRef  = db.collection('users').doc(user.uid);
-  const userSnap = await userRef.get();
-  const role     = user.email === ADMIN_EMAIL ? 'admin' : 'student';
+function dismissLoadingOverlay() {
+  const overlay = document.getElementById('loading-overlay');
+  overlay.style.opacity = '0';
+  setTimeout(() => { overlay.style.display = 'none'; }, 420);
+}
 
-  if (!userSnap.exists) {
-    await userRef.set({
+/* ═══════════════════════════════════════════════════════════
+   BOOTSTRAP — create user doc + seed default mistake types
+   ═══════════════════════════════════════════════════════════ */
+async function bootstrapNewUser(user) {
+  const userDocRef  = db.collection('users').doc(user.uid);
+  const userDocSnap = await userDocRef.get();
+  const role        = (user.email === ADMIN_EMAIL) ? 'admin' : 'student';
+
+  if (!userDocSnap.exists) {
+    await userDocRef.set({
       uid:         user.uid,
       email:       user.email,
       displayName: user.displayName || user.email.split('@')[0],
       photoURL:    user.photoURL    || null,
       role,
-      joinedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      joinedAt:    firebase.firestore.FieldValue.serverTimestamp(),
     });
-  } else if (user.email === ADMIN_EMAIL && userSnap.data().role !== 'admin') {
-    // Promote to admin if email matches
-    await userRef.update({ role: 'admin' });
+    console.log('[SciJournal] New user document created.');
+  } else if (isAdmin && userDocSnap.data().role !== 'admin') {
+    // Promote to admin if the email matches but role wasn't set yet
+    await userDocRef.update({ role: 'admin' });
+    console.log('[SciJournal] User promoted to admin.');
   }
 
-  isAdmin = user.email === ADMIN_EMAIL;
-
-  // Seed default mistake types once (only if collection is empty)
-  const snap = await db.collection('mistakeTypes').limit(1).get();
-  if (snap.empty) {
+  // Seed the default mistake types if the collection is completely empty
+  const typesSnapshot = await db.collection('mistakeTypes').limit(1).get();
+  if (typesSnapshot.empty) {
     const batch = db.batch();
-    SEED_TYPES.forEach(t => {
-      const ref = db.collection('mistakeTypes').doc();
-      batch.set(ref, {
-        ...t,
+    DEFAULT_MISTAKE_TYPES.forEach(typeData => {
+      const newRef = db.collection('mistakeTypes').doc();
+      batch.set(newRef, {
+        ...typeData,
         createdBy: user.uid,
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       });
     });
     await batch.commit();
-    console.log('[SciJournal] Seeded default mistake types.');
+    console.log('[SciJournal] Default mistake types seeded successfully.');
   }
 }
 
-// ============================================================
-// SHOW AUTH / APP
-// ============================================================
-function showAuth() {
+/* ═══════════════════════════════════════════════════════════
+   SHOW AUTH / SHOW APP
+   ═══════════════════════════════════════════════════════════ */
+function showAuthPage() {
   document.getElementById('auth-page').style.display  = 'flex';
   document.getElementById('main-app').style.display   = 'none';
 }
 
-function renderApp() {
+function showMainApp() {
   document.getElementById('auth-page').style.display  = 'none';
   document.getElementById('main-app').style.display   = 'block';
 
-  // Header: avatar + name
-  const avatarEl = document.getElementById('hdr-avatar');
-  const nameEl   = document.getElementById('hdr-name');
-  nameEl.textContent = currentUser.displayName || currentUser.email.split('@')[0];
+  // Populate header user chip
+  const avatarEl   = document.getElementById('header-avatar');
+  const usernameEl = document.getElementById('header-username');
+  usernameEl.textContent = currentUser.displayName || currentUser.email.split('@')[0];
 
   if (currentUser.photoURL) {
-    avatarEl.innerHTML = `<img src="${currentUser.photoURL}" alt="">`;
+    avatarEl.innerHTML = `<img src="${currentUser.photoURL}" alt="Profile photo">`;
   } else {
-    avatarEl.textContent = (currentUser.displayName || currentUser.email || '?').charAt(0).toUpperCase();
+    const initial = (currentUser.displayName || currentUser.email).charAt(0).toUpperCase();
+    avatarEl.textContent = initial;
   }
 
-  if (isAdmin) {
-    document.getElementById('badge-admin').classList.add('visible');
-    document.getElementById('btn-manage').classList.add('visible');
-  } else {
-    document.getElementById('badge-admin').classList.remove('visible');
-    document.getElementById('btn-manage').classList.remove('visible');
-  }
+  // Toggle admin-only elements
+  document.getElementById('badge-admin').classList.toggle('visible', isAdmin);
+  document.getElementById('btn-manage-types').classList.toggle('visible', isAdmin);
 
-  // Subscribe to live mistake types + entries
-  subscribeToMistakeTypes();
-  subscribeToEntries();
+  // Start live Firestore listeners
+  startTypesListener();
+  startEntriesListener();
 }
 
-// ============================================================
-// FIRESTORE: MISTAKE TYPES (live)
-// ============================================================
-function subscribeToMistakeTypes() {
-  db.collection('mistakeTypes')
-    .orderBy('order', 'asc')
+/* ═══════════════════════════════════════════════════════════
+   FIRESTORE: MISTAKE TYPES — live listener
+   Query without orderBy to avoid needing a composite index.
+   Sort client-side by the 'order' field instead.
+   ═══════════════════════════════════════════════════════════ */
+function startTypesListener() {
+  if (unsubscribeTypes) unsubscribeTypes();
+
+  unsubscribeTypes = db.collection('mistakeTypes')
     .onSnapshot(
-      snap => {
-        mistakeTypes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      (snapshot) => {
+        allMistakeTypes = snapshot.docs
+          .map(doc => ({ id: doc.id, ...doc.data() }))
+          .sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
+
         renderFilterChips();
-        renderMTypeSelector();
-        renderAdminTypeList();
+        renderMistakeTypeSelector();
+        renderAdminTypesList();
+        updateStatsPanel();
       },
-      () => {
-        // Fallback without ordering if index not built
-        db.collection('mistakeTypes').onSnapshot(snap => {
-          mistakeTypes = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-            .sort((a, b) => (a.order || 99) - (b.order || 99));
-          renderFilterChips();
-          renderMTypeSelector();
-          renderAdminTypeList();
-        });
+      (err) => {
+        console.error('[mistakeTypes listener]', err.code, err.message);
+        if (err.code === 'permission-denied') {
+          showToast(
+            '⚠️ Firestore permission denied for mistake types. Click "Setup Guide" to fix this.',
+            'error', 8000
+          );
+        }
       }
     );
 }
 
-// ============================================================
-// FIRESTORE: ENTRIES (live, per user)
-// ============================================================
-function subscribeToEntries() {
-  if (unsub) unsub();
+/* ═══════════════════════════════════════════════════════════
+   FIRESTORE: ENTRIES — live listener
+   KEY FIX: Query only on userId (single-field index, always
+   available). Sort client-side to avoid composite index error.
+   ═══════════════════════════════════════════════════════════ */
+function startEntriesListener() {
+  if (unsubscribeEntries) unsubscribeEntries();
 
-  unsub = db.collection('entries')
+  unsubscribeEntries = db.collection('entries')
     .where('userId', '==', currentUser.uid)
-    .orderBy('createdAt', 'desc')
     .onSnapshot(
-      snap => {
-        allEntries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        updateStats();
-        renderCards();
+      (snapshot) => {
+        allEntries = snapshot.docs
+          .map(doc => ({ id: doc.id, ...doc.data() }))
+          // Sort client-side: newest first based on createdAt timestamp
+          .sort((a, b) => {
+            const timeA = a.createdAt?.toMillis?.() ?? 0;
+            const timeB = b.createdAt?.toMillis?.() ?? 0;
+            return timeB - timeA;
+          });
+
+        updateStatsPanel();
+        renderEntryCards();
       },
-      err => {
-        console.error('[Entries]', err);
-        toast('Could not load entries. Check Firestore rules.', 'error');
+      (err) => {
+        console.error('[entries listener]', err.code, err.message);
+
+        if (err.code === 'permission-denied') {
+          renderPermissionDeniedState();
+        } else if (err.code === 'failed-precondition') {
+          showToast(
+            '⚠️ Firestore needs a composite index. Check the browser console for the creation link.',
+            'error', 8000
+          );
+        } else {
+          showToast(`❌ Failed to load entries: ${err.message}`, 'error', 7000);
+          renderEntryCards();
+        }
       }
     );
 }
 
-// ============================================================
-// STATS
-// ============================================================
-function updateStats() {
-  document.getElementById('stat-total').textContent  = allEntries.length;
+function renderPermissionDeniedState() {
+  document.getElementById('entries-grid').innerHTML = `
+    <div class="empty-state" style="grid-column: 1 / -1">
+      <span class="empty-state-emoji">🔒</span>
+      <h3>Permission Denied</h3>
+      <p>
+        Firebase security rules are currently blocking data access.
+        Open the Setup Guide to copy the correct rules into your Firebase Console.
+      </p>
+      <button class="btn btn-primary" onclick="openSetupModal()">
+        🔧 Open Setup Guide
+      </button>
+    </div>`;
+}
 
-  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  const weekCount = allEntries.filter(e => {
-    const d = e.createdAt?.toDate?.() ?? new Date(0);
-    return d > weekAgo;
+function tearDownSubscriptions() {
+  if (unsubscribeEntries) { unsubscribeEntries(); unsubscribeEntries = null; }
+  if (unsubscribeTypes)   { unsubscribeTypes();   unsubscribeTypes   = null; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   STATS PANEL
+   ═══════════════════════════════════════════════════════════ */
+function updateStatsPanel() {
+  // Total entries
+  document.getElementById('stat-total').textContent = allEntries.length;
+
+  // Entries logged this week
+  const oneWeekAgoMs = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const thisWeekCount = allEntries.filter(entry => {
+    const entryMs = entry.createdAt?.toMillis?.() ?? 0;
+    return entryMs > oneWeekAgoMs;
   }).length;
-  document.getElementById('stat-week').textContent   = weekCount;
+  document.getElementById('stat-this-week').textContent = thisWeekCount;
 
-  const withImg = allEntries.filter(e => e.imageURL).length;
-  document.getElementById('stat-images').textContent = withImg;
+  // Entries that have an image
+  const withImageCount = allEntries.filter(e => e.imageURL).length;
+  document.getElementById('stat-with-images').textContent = withImageCount;
 
-  // Top mistake type by frequency
-  const freq = {};
-  allEntries.forEach(e => (e.mistakeTypeIds || []).forEach(id => { freq[id] = (freq[id] || 0) + 1; }));
-  const [topId] = Object.entries(freq).sort((a, b) => b[1] - a[1])[0] ?? [];
-  const top = mistakeTypes.find(t => t.id === topId);
-  document.getElementById('stat-top').textContent = top ? `${top.icon || ''} ${top.name}` : '—';
+  // Top mistake type by frequency across all entries
+  const frequencyMap = {};
+  allEntries.forEach(entry => {
+    (entry.mistakeTypeIds || []).forEach(typeId => {
+      frequencyMap[typeId] = (frequencyMap[typeId] || 0) + 1;
+    });
+  });
+
+  const sortedFreq = Object.entries(frequencyMap).sort((a, b) => b[1] - a[1]);
+  const topTypeId  = sortedFreq[0]?.[0];
+  const topType    = topTypeId ? allMistakeTypes.find(t => t.id === topTypeId) : null;
+
+  document.getElementById('stat-top-mistake').textContent =
+    topType ? `${topType.icon || ''} ${topType.name}` : '—';
 }
 
-// ============================================================
-// FILTER CHIPS
-// ============================================================
+/* ═══════════════════════════════════════════════════════════
+   FILTER CHIPS
+   ═══════════════════════════════════════════════════════════ */
 function renderFilterChips() {
-  const wrap = document.getElementById('filter-chips');
-  let html = `<button class="chip ${currentFilter === 'all' ? 'active' : ''}"
-    data-id="all" onclick="applyFilter('all',this)">All</button>`;
+  const container = document.getElementById('filter-chips-container');
 
-  mistakeTypes.forEach(t => {
-    const active = currentFilter === t.id;
-    const style  = active ? `background:${t.color}22;border-color:${t.color}88;color:${t.color}` : '';
-    html += `<button class="chip ${active ? 'active' : ''}"
-      data-id="${t.id}" style="${style}"
-      onclick="applyFilter('${t.id}',this)">
-      ${t.icon || ''} ${htmlEsc(t.name)}
+  let html = `
+    <button class="filter-chip ${activeFilterId === 'all' ? 'active' : ''}"
+      data-filter-id="all" onclick="applyFilter('all', this)">
+      All
     </button>`;
+
+  allMistakeTypes.forEach(type => {
+    const isActive  = activeFilterId === type.id;
+    const activeStyle = isActive
+      ? `background:${type.color}22; border-color:${type.color}88; color:${type.color}`
+      : '';
+
+    html += `
+      <button class="filter-chip ${isActive ? 'active' : ''}"
+        data-filter-id="${type.id}"
+        style="${activeStyle}"
+        onclick="applyFilter('${type.id}', this)">
+        ${type.icon || ''} ${htmlEscape(type.name)}
+      </button>`;
   });
 
-  wrap.innerHTML = html;
+  container.innerHTML = html;
 }
 
-function applyFilter(id, btn) {
-  currentFilter = id;
-  document.querySelectorAll('#filter-chips .chip').forEach(c => {
-    c.classList.remove('active');
-    c.style.cssText = '';
+function applyFilter(filterId, buttonEl) {
+  activeFilterId = filterId;
+
+  // Reset all chip styles
+  document.querySelectorAll('#filter-chips-container .filter-chip').forEach(chip => {
+    chip.classList.remove('active');
+    chip.style.cssText = '';
   });
-  btn.classList.add('active');
-  if (id !== 'all') {
-    const t = mistakeTypes.find(x => x.id === id);
-    if (t) {
-      btn.style.background   = t.color + '22';
-      btn.style.borderColor  = t.color + '88';
-      btn.style.color        = t.color;
+
+  // Activate selected chip
+  buttonEl.classList.add('active');
+  if (filterId !== 'all') {
+    const type = allMistakeTypes.find(t => t.id === filterId);
+    if (type) {
+      buttonEl.style.background   = type.color + '22';
+      buttonEl.style.borderColor  = type.color + '88';
+      buttonEl.style.color        = type.color;
     }
   }
-  renderCards();
+
+  renderEntryCards();
 }
 
-// ============================================================
-// RENDER ENTRY CARDS
-// ============================================================
-function renderCards() {
-  const query  = document.getElementById('search-inp').value.trim().toLowerCase();
-  const grid   = document.getElementById('entries-grid');
+/* ═══════════════════════════════════════════════════════════
+   RENDER ENTRY CARDS
+   ═══════════════════════════════════════════════════════════ */
+function renderEntryCards() {
+  const searchQuery = document.getElementById('search-input').value.trim().toLowerCase();
+  const gridEl      = document.getElementById('entries-grid');
 
-  let filtered = allEntries.filter(e => {
-    const matchFilter = currentFilter === 'all' || (e.mistakeTypeIds || []).includes(currentFilter);
-    const matchSearch = !query
-      || (e.title || '').toLowerCase().includes(query)
-      || (e.description || '').toLowerCase().includes(query)
-      || (e.topic || '').toLowerCase().includes(query);
-    return matchFilter && matchSearch;
+  // Filter entries by active type filter AND search query
+  const filtered = allEntries.filter(entry => {
+    const matchesFilter = activeFilterId === 'all' ||
+      (entry.mistakeTypeIds || []).includes(activeFilterId);
+
+    const matchesSearch = !searchQuery ||
+      (entry.title       || '').toLowerCase().includes(searchQuery) ||
+      (entry.description || '').toLowerCase().includes(searchQuery) ||
+      (entry.topic       || '').toLowerCase().includes(searchQuery);
+
+    return matchesFilter && matchesSearch;
   });
 
-  if (!filtered.length) {
-    grid.innerHTML = `
+  if (filtered.length === 0) {
+    const hasActiveSearch = searchQuery || activeFilterId !== 'all';
+    gridEl.innerHTML = `
       <div class="empty-state">
-        <div class="empty-state-emoji">📓</div>
-        <h3>${query || currentFilter !== 'all' ? 'No matching entries' : 'Nothing here yet'}</h3>
-        <p>${query || currentFilter !== 'all'
-          ? 'Try a different search term or filter.'
-          : 'Click <strong>+ New Entry</strong> to start journalling your science mistakes.'
-        }</p>
+        <span class="empty-state-emoji">${hasActiveSearch ? '🔍' : '📓'}</span>
+        <h3>${hasActiveSearch ? 'No matching entries' : 'Nothing here yet'}</h3>
+        <p>
+          ${hasActiveSearch
+            ? 'Try adjusting the search term or removing the filter.'
+            : 'Click <strong>＋ New Entry</strong> to start journalling your first science mistake.'}
+        </p>
       </div>`;
     return;
   }
 
-  grid.innerHTML = filtered.map(e => buildCard(e)).join('');
+  gridEl.innerHTML = filtered.map(entry => buildEntryCardHTML(entry)).join('');
 }
 
-function buildCard(e) {
-  const date  = e.assessmentDate
-    ? new Date(e.assessmentDate).toLocaleDateString('en-SG', { day:'2-digit', month:'short', year:'2-digit' })
-    : (e.createdAt?.toDate?.()?.toLocaleDateString('en-SG') || '');
+function buildEntryCardHTML(entry) {
+  // Format the display date
+  const displayDate = entry.assessmentDate
+    ? new Date(entry.assessmentDate).toLocaleDateString('en-SG', {
+        day: '2-digit', month: 'short', year: '2-digit'
+      })
+    : (entry.createdAt?.toDate?.()?.toLocaleDateString('en-SG', {
+        day: '2-digit', month: 'short', year: '2-digit'
+      }) || '');
 
-  const types = (e.mistakeTypeIds || []).map(id => mistakeTypes.find(t => t.id === id)).filter(Boolean);
-  const shown = types.slice(0, 3);
-  const extra = types.length - shown.length;
+  // Resolve type objects for this entry
+  const resolvedTypes = (entry.mistakeTypeIds || [])
+    .map(id => allMistakeTypes.find(t => t.id === id))
+    .filter(Boolean);
 
-  const tagsHtml = shown.map(t =>
-    `<span class="mistake-tag"
-      style="background:${t.color}20;color:${t.color};border:1px solid ${t.color}40">
-      ${t.icon || ''} ${htmlEsc(t.name)}
+  const shownTypes   = resolvedTypes.slice(0, 3);
+  const extraCount   = resolvedTypes.length - shownTypes.length;
+
+  const tagsHTML = shownTypes.map(type =>
+    `<span class="mistake-type-badge"
+      style="background:${type.color}20; color:${type.color}; border:1px solid ${type.color}40">
+      ${type.icon || ''} ${htmlEscape(type.name)}
     </span>`
-  ).join('') + (extra > 0 ? `<span class="mistake-tag" style="background:var(--bg-4);color:var(--text-muted)">+${extra}</span>` : '');
+  ).join('') + (extraCount > 0
+    ? `<span class="mistake-type-badge"
+        style="background:var(--bg-4); color:var(--text-muted)">
+        +${extraCount} more
+       </span>`
+    : '');
 
-  const thumbHtml = e.imageURL
-    ? `<div class="card-thumb">
-        <img src="${htmlEsc(e.imageURL)}" alt="" loading="lazy"
-          onerror="this.parentElement.innerHTML='<div class=card-no-image>📷<span>Image unavailable</span></div>'">
+  const thumbnailHTML = entry.imageURL
+    ? `<div class="card-thumbnail">
+        <img src="${htmlEscape(entry.imageURL)}" alt="Entry image" loading="lazy"
+          onerror="this.parentElement.innerHTML='<div class=card-no-image><span>📷</span><span class=card-no-image-label>Image error</span></div>'">
        </div>`
-    : `<div class="card-thumb">
-        <div class="card-no-image">📓<span>No image attached</span></div>
+    : `<div class="card-thumbnail">
+        <div class="card-no-image">
+          <span>📓</span>
+          <span class="card-no-image-label">No image attached</span>
+        </div>
        </div>`;
 
   return `
-    <div class="entry-card" onclick="viewEntry('${e.id}')">
-      ${thumbHtml}
+    <div class="entry-card" onclick="openViewEntryModal('${entry.id}')">
+      ${thumbnailHTML}
       <div class="card-body">
-        <div class="card-header">
-          <div class="card-title">${htmlEsc(e.title || 'Untitled Entry')}</div>
-          <div class="card-date">${htmlEsc(date)}</div>
+        <div class="card-header-row">
+          <div class="card-title">${htmlEscape(entry.title || 'Untitled Entry')}</div>
+          <div class="card-date-label">${htmlEscape(displayDate)}</div>
         </div>
-        ${e.topic ? `<div class="card-topic">📌 ${htmlEsc(e.topic)}</div>` : ''}
-        ${e.description ? `<div class="card-desc">${htmlEsc(e.description)}</div>` : ''}
-        ${tagsHtml ? `<div class="card-tags">${tagsHtml}</div>` : ''}
+        ${entry.topic
+          ? `<div class="card-topic-row">📌 ${htmlEscape(entry.topic)}</div>`
+          : ''}
+        ${entry.description
+          ? `<div class="card-description-preview">${htmlEscape(entry.description)}</div>`
+          : ''}
+        ${tagsHTML
+          ? `<div class="card-tags-row">${tagsHTML}</div>`
+          : ''}
       </div>
-      <div class="card-actions" onclick="event.stopPropagation()">
-        <button class="btn-card edit"   onclick="openEntryModal('${e.id}')">✏️ Edit</button>
-        <button class="btn-card delete" onclick="confirmDelete('${e.id}')">🗑 Delete</button>
+      <div class="card-actions-row" onclick="event.stopPropagation()">
+        <button class="card-action-btn edit"
+          onclick="openEntryModal('${entry.id}')">✏️ Edit</button>
+        <button class="card-action-btn delete"
+          onclick="confirmAndDeleteEntry('${entry.id}')">🗑 Delete</button>
       </div>
     </div>`;
 }
 
-// ============================================================
-// OPEN ENTRY MODAL (new or edit)
-// ============================================================
+/* ═══════════════════════════════════════════════════════════
+   OPEN ADD / EDIT ENTRY MODAL
+   ═══════════════════════════════════════════════════════════ */
 function openEntryModal(entryId) {
-  editingId    = entryId;
-  pendingFile  = null;
-  selTypes     = new Set();
-  uploadedURL  = null;
+  currentEditingId  = entryId;
+  pendingUploadFile = null;
+  selectedTypeIds   = new Set();
+  confirmedImageURL = null;
 
-  const isEdit = Boolean(entryId);
-  const entry  = isEdit ? allEntries.find(e => e.id === entryId) : null;
+  // Revoke any previous blob URL
+  if (pendingBlobURL) {
+    URL.revokeObjectURL(pendingBlobURL);
+    pendingBlobURL = null;
+  }
 
-  document.getElementById('entry-modal-title').textContent = isEdit ? '✏️ Edit Entry' : '📝 New Entry';
-  document.getElementById('f-title').value  = entry?.title          || '';
-  document.getElementById('f-topic').value  = entry?.topic          || '';
-  document.getElementById('f-date').value   = entry?.assessmentDate || new Date().toISOString().split('T')[0];
-  document.getElementById('f-desc').value   = entry?.description    || '';
-  document.getElementById('file-inp').value = '';
+  const isEditing    = Boolean(entryId);
+  const existingEntry = isEditing ? allEntries.find(e => e.id === entryId) : null;
 
-  // Image state
-  if (entry?.imageURL) {
-    uploadedURL = entry.imageURL;
-    setPreview(entry.imageURL);
+  // Set modal title
+  document.getElementById('entry-modal-title').textContent =
+    isEditing ? '✏️ Edit Entry' : '📝 New Entry';
+
+  // Populate fields from existing entry or reset
+  document.getElementById('field-title').value  = existingEntry?.title          || '';
+  document.getElementById('field-topic').value  = existingEntry?.topic          || '';
+  document.getElementById('field-date').value   = existingEntry?.assessmentDate || getTodayISO();
+  document.getElementById('field-description').value = existingEntry?.description || '';
+  document.getElementById('file-input').value   = '';
+
+  // Reset upload progress bar
+  document.getElementById('upload-progress-container').classList.remove('visible');
+  document.getElementById('upload-progress-fill').style.width = '0%';
+
+  // Set image state
+  if (existingEntry?.imageURL) {
+    confirmedImageURL = existingEntry.imageURL;
+    setImagePreview(existingEntry.imageURL);
   } else {
-    clearImage();
+    clearImageSelection();
   }
 
-  // Pre-select types if editing
-  if (entry?.mistakeTypeIds) {
-    selTypes = new Set(entry.mistakeTypeIds);
+  // Restore previously-selected types when editing
+  if (existingEntry?.mistakeTypeIds) {
+    selectedTypeIds = new Set(existingEntry.mistakeTypeIds);
   }
 
-  document.getElementById('up-progress').classList.remove('show');
-  renderMTypeSelector();
-  closeOverlay('ov-view');
-  openOverlay('ov-entry');
+  renderMistakeTypeSelector();
+
+  // Close view modal if open, then open entry modal
+  closeOverlay('overlay-view');
+  openOverlay('overlay-entry');
 }
 
-// ============================================================
-// SAVE ENTRY
-// ============================================================
-async function saveEntry() {
-  const title = document.getElementById('f-title').value.trim();
-  const topic = document.getElementById('f-topic').value.trim();
-  const date  = document.getElementById('f-date').value;
-  const desc  = document.getElementById('f-desc').value.trim();
-  const btn   = document.getElementById('save-btn');
+function getTodayISO() {
+  return new Date().toISOString().split('T')[0];
+}
 
-  if (!title)            { toast('Please enter a title for this entry.', 'error'); return; }
-  if (selTypes.size < 1) { toast('Please select at least one mistake type.', 'error'); return; }
+/* ═══════════════════════════════════════════════════════════
+   SAVE ENTRY TO FIRESTORE
+   KEY FIX: use request.resource.data for create,
+            resource.data for update — rules match accordingly.
+   ═══════════════════════════════════════════════════════════ */
+async function saveEntryToFirestore() {
+  const titleValue = document.getElementById('field-title').value.trim();
+  const topicValue = document.getElementById('field-topic').value.trim();
+  const dateValue  = document.getElementById('field-date').value;
+  const descValue  = document.getElementById('field-description').value.trim();
+  const saveBtn    = document.getElementById('save-entry-btn');
 
-  btn.textContent = '⏳ Saving…';
-  btn.disabled    = true;
+  // Validate required fields
+  if (!titleValue) {
+    showToast('Please enter a title for this entry.', 'error');
+    document.getElementById('field-title').focus();
+    return;
+  }
+
+  if (selectedTypeIds.size === 0) {
+    showToast('Please select at least one mistake type.', 'error');
+    return;
+  }
+
+  saveBtn.textContent = '⏳ Saving…';
+  saveBtn.disabled    = true;
 
   try {
-    // Upload image to Firebase Storage if new file pending
-    if (pendingFile) {
-      uploadedURL = await uploadToStorage(pendingFile);
+    // Step 1: Upload new image if one was selected
+    if (pendingUploadFile) {
+      showToast('📤 Uploading image to Firebase Storage…', 'info');
+      confirmedImageURL = await uploadImageToStorage(pendingUploadFile);
+      pendingUploadFile = null;
+
+      // Clean up blob URL after successful upload
+      if (pendingBlobURL) {
+        URL.revokeObjectURL(pendingBlobURL);
+        pendingBlobURL = null;
+      }
     }
 
-    const payload = {
+    // Step 2: Build Firestore document payload
+    const serverTimestamp = firebase.firestore.FieldValue.serverTimestamp();
+
+    const entryPayload = {
       userId:         currentUser.uid,
-      title,
-      topic,
-      assessmentDate: date,
-      description:    desc,
-      mistakeTypeIds: Array.from(selTypes),
-      imageURL:       uploadedURL || null,
-      updatedAt:      firebase.firestore.FieldValue.serverTimestamp(),
+      title:          titleValue,
+      topic:          topicValue  || null,
+      assessmentDate: dateValue   || null,
+      description:    descValue   || null,
+      mistakeTypeIds: Array.from(selectedTypeIds),
+      imageURL:       confirmedImageURL || null,
+      updatedAt:      serverTimestamp,
     };
 
-    if (editingId) {
-      await db.collection('entries').doc(editingId).update(payload);
-      toast('Entry updated! ✏️', 'success');
+    // Step 3: Write to Firestore
+    if (currentEditingId) {
+      // UPDATE — Firestore rule checks resource.data.userId == auth.uid
+      await db.collection('entries').doc(currentEditingId).update(entryPayload);
+      console.log('[SciJournal] Entry updated:', currentEditingId);
+      showToast('Entry updated! ✏️', 'success');
     } else {
-      payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-      await db.collection('entries').add(payload);
-      toast('Entry saved! 🎉', 'success');
+      // CREATE — Firestore rule checks request.resource.data.userId == auth.uid
+      entryPayload.createdAt = serverTimestamp;
+      const newDocRef = await db.collection('entries').add(entryPayload);
+      console.log('[SciJournal] Entry created:', newDocRef.id);
+      showToast('Entry saved! 🎉', 'success');
     }
 
-    closeOverlay('ov-entry');
+    closeOverlay('overlay-entry');
+
   } catch (err) {
-    console.error('[saveEntry]', err);
-    toast('Failed to save. Check console for details.', 'error');
+    console.error('[saveEntry] Error —', 'code:', err.code, '| message:', err.message);
+
+    if (err.code === 'permission-denied') {
+      showToast(
+        '❌ Firestore rules are blocking the save. Click "Setup Guide" in the header to fix this.',
+        'error', 9000
+      );
+    } else if (err.code === 'storage/unauthorized') {
+      showToast(
+        '❌ Storage rules are blocking the image upload. Click "Setup Guide" to fix this.',
+        'error', 9000
+      );
+    } else if (
+      err.code === 'storage/unknown' ||
+      err.code === 'storage/retry-limit-exceeded' ||
+      err.code === 'storage/server-file-wrong-size'
+    ) {
+      showToast(
+        '❌ Image upload failed. Check your internet connection and try again.',
+        'error', 7000
+      );
+    } else {
+      showToast(
+        `❌ Unexpected error: ${err.message || 'Check the browser console for details.'}`,
+        'error', 7000
+      );
+    }
   } finally {
-    btn.textContent = '💾 Save Entry';
-    btn.disabled    = false;
+    saveBtn.textContent = '💾 Save Entry';
+    saveBtn.disabled    = false;
   }
 }
 
-// ============================================================
-// DELETE ENTRY
-// ============================================================
-async function confirmDelete(entryId) {
-  if (!confirm('Delete this journal entry? This cannot be undone.')) return;
+/* ═══════════════════════════════════════════════════════════
+   DELETE ENTRY
+   ═══════════════════════════════════════════════════════════ */
+async function confirmAndDeleteEntry(entryId) {
+  if (!confirm('Delete this journal entry permanently?\n\nThis action cannot be undone.')) return;
+
+  const entryToDelete = allEntries.find(e => e.id === entryId);
 
   try {
-    const entry = allEntries.find(e => e.id === entryId);
     await db.collection('entries').doc(entryId).delete();
+    console.log('[SciJournal] Entry deleted:', entryId);
 
-    // Best-effort: delete image from Storage too
-    if (entry?.imageURL) {
-      try { await storage.refFromURL(entry.imageURL).delete(); } catch (_) {}
+    // Best-effort: also delete the image from Storage
+    if (entryToDelete?.imageURL) {
+      try {
+        const storageRef = storage.refFromURL(entryToDelete.imageURL);
+        await storageRef.delete();
+        console.log('[SciJournal] Associated Storage image deleted.');
+      } catch (storageErr) {
+        // Don't fail the delete if storage cleanup fails
+        console.warn('[SciJournal] Could not delete Storage image:', storageErr.message);
+      }
     }
 
-    toast('Entry deleted.', 'info');
+    showToast('Entry deleted.', 'info');
   } catch (err) {
-    console.error('[deleteEntry]', err);
-    toast('Failed to delete entry.', 'error');
+    console.error('[deleteEntry]', err.code, err.message);
+    if (err.code === 'permission-denied') {
+      showToast('❌ Firestore rules blocked this delete. Check Setup Guide.', 'error', 7000);
+    } else {
+      showToast(`❌ Failed to delete: ${err.message}`, 'error');
+    }
   }
 }
 
-// ============================================================
-// VIEW ENTRY MODAL
-// ============================================================
-function viewEntry(entryId) {
-  const e = allEntries.find(x => x.id === entryId);
-  if (!e) return;
-  viewingId = entryId;
+/* ═══════════════════════════════════════════════════════════
+   VIEW ENTRY MODAL
+   ═══════════════════════════════════════════════════════════ */
+function openViewEntryModal(entryId) {
+  const entry = allEntries.find(e => e.id === entryId);
+  if (!entry) return;
 
-  document.getElementById('view-title').textContent = e.title || 'Entry';
+  currentViewingId = entryId;
+  document.getElementById('view-entry-title').textContent = entry.title || 'Entry';
 
-  const types    = (e.mistakeTypeIds || []).map(id => mistakeTypes.find(t => t.id === id)).filter(Boolean);
-  const tagsHtml = types.map(t =>
-    `<span class="view-tag" style="background:${t.color}20;color:${t.color};border:1px solid ${t.color}40">
-      ${t.icon || ''} ${htmlEsc(t.name)}
+  // Resolve types
+  const resolvedTypes = (entry.mistakeTypeIds || [])
+    .map(id => allMistakeTypes.find(t => t.id === id))
+    .filter(Boolean);
+
+  const tagsHTML = resolvedTypes.map(type =>
+    `<span class="view-mistake-tag"
+      style="background:${type.color}20; color:${type.color}; border:1px solid ${type.color}40">
+      ${type.icon || ''} ${htmlEscape(type.name)}
     </span>`
   ).join('');
 
-  const assessDate = e.assessmentDate
-    ? new Date(e.assessmentDate).toLocaleDateString('en-SG', { day:'numeric', month:'long', year:'numeric' })
-    : null;
-  const logDate = e.createdAt?.toDate?.()
-    ? e.createdAt.toDate().toLocaleDateString('en-SG', { day:'numeric', month:'short', year:'numeric' })
+  // Format dates
+  const assessmentDateStr = entry.assessmentDate
+    ? new Date(entry.assessmentDate).toLocaleDateString('en-SG', {
+        day: 'numeric', month: 'long', year: 'numeric'
+      })
     : null;
 
-  document.getElementById('view-body').innerHTML = `
-    ${e.imageURL ? `<img class="view-image" src="${htmlEsc(e.imageURL)}" alt="Attached image"
-      onerror="this.style.display='none'">` : ''}
+  const loggedDateStr = entry.createdAt?.toDate?.()
+    ? entry.createdAt.toDate().toLocaleDateString('en-SG', {
+        day: 'numeric', month: 'short', year: 'numeric'
+      })
+    : null;
 
-    <div class="view-meta">
-      ${e.topic      ? `<div class="view-meta-item">📌 <strong>${htmlEsc(e.topic)}</strong></div>` : ''}
-      ${assessDate   ? `<div class="view-meta-item">📅 Assessment: <strong>${htmlEsc(assessDate)}</strong></div>` : ''}
-      ${logDate      ? `<div class="view-meta-item">🗓 Logged: <strong>${htmlEsc(logDate)}</strong></div>` : ''}
+  // Build HTML for the modal body
+  document.getElementById('view-entry-body').innerHTML = `
+    ${entry.imageURL ? `
+      <a href="${htmlEscape(entry.imageURL)}" target="_blank" rel="noopener"
+        title="Open full-size image in new tab">
+        <img class="view-entry-image"
+          src="${htmlEscape(entry.imageURL)}"
+          alt="Attached image for this entry"
+          onerror="this.closest('a').style.display='none'">
+      </a>` : ''}
+
+    <div class="view-entry-meta">
+      ${entry.topic        ? `<div class="view-meta-item">📌 <strong>${htmlEscape(entry.topic)}</strong></div>` : ''}
+      ${assessmentDateStr  ? `<div class="view-meta-item">📅 Assessment: <strong>${htmlEscape(assessmentDateStr)}</strong></div>` : ''}
+      ${loggedDateStr      ? `<div class="view-meta-item">🗓 Logged: <strong>${htmlEscape(loggedDateStr)}</strong></div>` : ''}
     </div>
 
-    ${tagsHtml ? `
+    ${tagsHTML ? `
       <div>
-        <div class="view-section-label">Mistake Types Identified</div>
-        <div class="view-tags">${tagsHtml}</div>
+        <div class="view-section-title">Mistake Types Identified</div>
+        <div class="view-tags-container">${tagsHTML}</div>
       </div>` : ''}
 
-    ${e.description ? `
+    ${entry.description ? `
       <div>
-        <div class="view-section-label">Reflection & Correct Answer</div>
-        <div class="view-desc">${htmlEsc(e.description)}</div>
-      </div>` : ''}
-  `;
+        <div class="view-section-title">Reflection &amp; Correct Answer</div>
+        <div class="view-description-box">${htmlEscape(entry.description)}</div>
+      </div>` : ''}`;
 
-  openOverlay('ov-view');
+  openOverlay('overlay-view');
 }
 
-function editFromView()   { if (viewingId) openEntryModal(viewingId); }
-function deleteFromView() { if (viewingId) { closeOverlay('ov-view'); confirmDelete(viewingId); } }
-
-// ============================================================
-// IMAGE UPLOAD HELPERS
-// ============================================================
-function fileSelected(e) {
-  const file = e.target.files[0];
-  if (file) loadPendingFile(file);
+function editEntryFromViewModal() {
+  if (currentViewingId) openEntryModal(currentViewingId);
 }
 
-function dzDragOver(e) {
-  e.preventDefault();
-  document.getElementById('upload-zone').classList.add('dragover');
-}
-function dzDragLeave()  { document.getElementById('upload-zone').classList.remove('dragover'); }
-function dzDrop(e) {
-  e.preventDefault();
-  document.getElementById('upload-zone').classList.remove('dragover');
-  const file = e.dataTransfer.files[0];
-  if (file && file.type.startsWith('image/')) loadPendingFile(file);
-  else toast('Please drop an image file (PNG, JPG, WEBP).', 'error');
+function deleteEntryFromViewModal() {
+  if (!currentViewingId) return;
+  closeOverlay('overlay-view');
+  setTimeout(() => confirmAndDeleteEntry(currentViewingId), 250);
 }
 
-function loadPendingFile(file) {
-  if (file.size > 10 * 1024 * 1024) { toast('Image exceeds 10 MB limit.', 'error'); return; }
-  pendingFile  = file;
-  uploadedURL  = null;                      // will be set after upload
-  setPreview(URL.createObjectURL(file));
+/* ═══════════════════════════════════════════════════════════
+   IMAGE UPLOAD — drag & drop + file picker
+   ═══════════════════════════════════════════════════════════ */
+function onFileInputChange(event) {
+  const file = event.target.files[0];
+  if (file) loadFileForUpload(file);
 }
 
-function setPreview(src) {
-  document.getElementById('preview-img').src       = src;
-  document.getElementById('preview-wrap').style.display = 'block';
-  document.getElementById('upload-zone').style.display  = 'none';
+function handleDragOver(event) {
+  event.preventDefault();
+  document.getElementById('upload-drop-zone').classList.add('dragging-over');
 }
 
-function clearImage() {
-  pendingFile  = null;
-  uploadedURL  = null;
-  document.getElementById('file-inp').value              = '';
-  document.getElementById('preview-wrap').style.display  = 'none';
-  document.getElementById('upload-zone').style.display   = 'block';
+function handleDragLeave() {
+  document.getElementById('upload-drop-zone').classList.remove('dragging-over');
 }
 
-async function uploadToStorage(file) {
+function handleDrop(event) {
+  event.preventDefault();
+  document.getElementById('upload-drop-zone').classList.remove('dragging-over');
+  const file = event.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) {
+    loadFileForUpload(file);
+  } else {
+    showToast('Please drop an image file (PNG, JPG, or WEBP).', 'error');
+  }
+}
+
+function loadFileForUpload(file) {
+  const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
+  if (file.size > MAX_BYTES) {
+    showToast('Image exceeds the 10 MB limit. Please compress it first.', 'error');
+    return;
+  }
+
+  pendingUploadFile = file;
+  confirmedImageURL = null; // Will be set after upload completes
+
+  // Revoke previous blob URL if any
+  if (pendingBlobURL) URL.revokeObjectURL(pendingBlobURL);
+  pendingBlobURL = URL.createObjectURL(file);
+
+  setImagePreview(pendingBlobURL);
+}
+
+function setImagePreview(imageSrc) {
+  document.getElementById('image-preview-img').src         = imageSrc;
+  document.getElementById('image-preview-wrap').style.display = 'block';
+  document.getElementById('upload-drop-zone').style.display   = 'none';
+}
+
+function clearImageSelection() {
+  pendingUploadFile = null;
+  confirmedImageURL = null;
+
+  if (pendingBlobURL) {
+    URL.revokeObjectURL(pendingBlobURL);
+    pendingBlobURL = null;
+  }
+
+  document.getElementById('file-input').value               = '';
+  document.getElementById('image-preview-wrap').style.display = 'none';
+  document.getElementById('upload-drop-zone').style.display   = 'block';
+}
+
+/* ═══════════════════════════════════════════════════════════
+   UPLOAD IMAGE TO FIREBASE STORAGE
+   Images are stored at: journal_images/{userId}/{filename}
+   This matches the Storage security rules exactly.
+   ═══════════════════════════════════════════════════════════ */
+async function uploadImageToStorage(file) {
   return new Promise((resolve, reject) => {
-    const ext   = file.name.split('.').pop() || 'jpg';
-    const fname = `${Date.now()}_${Math.random().toString(36).slice(2,8)}.${ext}`;
-    const path  = `journal_images/${currentUser.uid}/${fname}`;
-    const ref   = storage.ref().child(path);
+    // Build a unique filename: timestamp + random suffix + extension
+    const rawExt     = file.name.split('.').pop() || 'jpg';
+    const safeExt    = rawExt.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'jpg';
+    const randomSuffix = Math.random().toString(36).slice(2, 10);
+    const fileName   = `${Date.now()}_${randomSuffix}.${safeExt}`;
 
-    const progWrap = document.getElementById('up-progress');
-    const bar      = document.getElementById('up-bar');
-    const label    = document.getElementById('up-label');
+    // Storage path matches the security rule: journal_images/{userId}/{filename}
+    const storagePath = `journal_images/${currentUser.uid}/${fileName}`;
+    const storageRef  = storage.ref().child(storagePath);
 
-    progWrap.classList.add('show');
-    bar.style.width  = '0%';
-    label.textContent = 'Uploading image…';
+    const progressContainer = document.getElementById('upload-progress-container');
+    const progressFill      = document.getElementById('upload-progress-fill');
+    const progressLabel     = document.getElementById('upload-progress-label');
 
-    const task = ref.put(file);
+    progressContainer.classList.add('visible');
+    progressFill.style.width   = '0%';
+    progressLabel.textContent  = 'Uploading image to Firebase Storage…';
 
-    task.on('state_changed',
-      snap => {
-        const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
-        bar.style.width   = pct + '%';
-        label.textContent = `Uploading… ${pct}%`;
+    const uploadTask = storageRef.put(file, { contentType: file.type });
+
+    uploadTask.on(
+      'state_changed',
+
+      // Progress callback
+      (snapshot) => {
+        const percentage = Math.round(
+          (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+        );
+        progressFill.style.width  = percentage + '%';
+        progressLabel.textContent = `Uploading… ${percentage}%`;
       },
-      err => {
-        progWrap.classList.remove('show');
-        reject(err);
+
+      // Error callback
+      (uploadErr) => {
+        progressContainer.classList.remove('visible');
+        console.error('[uploadImageToStorage] Error —', uploadErr.code, uploadErr.message);
+        reject(uploadErr);
       },
+
+      // Completion callback
       async () => {
-        const url = await task.snapshot.ref.getDownloadURL();
-        label.textContent = '✅ Upload complete!';
-        setTimeout(() => progWrap.classList.remove('show'), 1200);
-        resolve(url);
+        try {
+          const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+          progressFill.style.width  = '100%';
+          progressLabel.textContent = '✅ Image uploaded successfully!';
+          setTimeout(() => progressContainer.classList.remove('visible'), 1600);
+          console.log('[SciJournal] Image uploaded:', storagePath);
+          resolve(downloadURL);
+        } catch (urlErr) {
+          progressContainer.classList.remove('visible');
+          reject(urlErr);
+        }
       }
     );
   });
 }
 
-// ============================================================
-// MISTAKE TYPE SELECTOR (in entry modal)
-// ============================================================
-function renderMTypeSelector() {
-  const wrap = document.getElementById('mtype-selector');
-  wrap.innerHTML = '';
+/* ═══════════════════════════════════════════════════════════
+   MISTAKE TYPE SELECTOR (in entry modal)
+   ═══════════════════════════════════════════════════════════ */
+function renderMistakeTypeSelector() {
+  const selectorEl = document.getElementById('mistake-type-selector');
+  if (!selectorEl) return;
 
-  if (!mistakeTypes.length) {
-    wrap.innerHTML = `<p style="color:var(--text-muted);font-size:0.85rem">Loading mistake types…</p>`;
+  selectorEl.innerHTML = '';
+
+  if (!allMistakeTypes.length) {
+    selectorEl.innerHTML = `
+      <p style="color:var(--text-muted); font-size:0.875rem; grid-column:1/-1">
+        Loading mistake types…
+      </p>`;
     return;
   }
 
-  mistakeTypes.forEach(t => {
-    const sel = selTypes.has(t.id);
-    const div = document.createElement('div');
-    div.className  = `mtype-option ${sel ? 'sel' : ''}`;
-    div.dataset.id = t.id;
-    if (sel) {
-      div.style.borderColor = t.color;
-      div.style.background  = t.color + '20';
-      div.style.color       = t.color;
+  allMistakeTypes.forEach(type => {
+    const isSelected = selectedTypeIds.has(type.id);
+    const optionEl   = document.createElement('div');
+
+    optionEl.className   = `mistake-type-option${isSelected ? ' selected' : ''}`;
+    optionEl.dataset.typeId = type.id;
+
+    if (isSelected) {
+      optionEl.style.borderColor = type.color;
+      optionEl.style.background  = type.color + '20';
+      optionEl.style.color       = type.color;
     }
-    div.innerHTML = `
-      <div class="mtype-dot" style="background:${t.color}"></div>
-      <span class="mtype-label">${t.icon || ''} ${htmlEsc(t.name)}</span>
-      <span class="mtype-check">✓</span>`;
-    div.addEventListener('click', () => toggleMType(t.id, div, t.color));
-    wrap.appendChild(div);
+
+    optionEl.innerHTML = `
+      <div class="mtype-color-dot" style="background:${type.color}"></div>
+      <span class="mtype-label">${type.icon || ''} ${htmlEscape(type.name)}</span>
+      <span class="mtype-checkmark">✓</span>`;
+
+    optionEl.addEventListener('click', () => {
+      toggleMistakeTypeSelection(type.id, optionEl, type.color);
+    });
+
+    selectorEl.appendChild(optionEl);
   });
 }
 
-function toggleMType(id, el, color) {
-  if (selTypes.has(id)) {
-    selTypes.delete(id);
-    el.classList.remove('sel');
-    el.style.borderColor = '';
-    el.style.background  = '';
-    el.style.color       = '';
+function toggleMistakeTypeSelection(typeId, optionEl, color) {
+  if (selectedTypeIds.has(typeId)) {
+    // Deselect
+    selectedTypeIds.delete(typeId);
+    optionEl.classList.remove('selected');
+    optionEl.style.borderColor = '';
+    optionEl.style.background  = '';
+    optionEl.style.color       = '';
   } else {
-    selTypes.add(id);
-    el.classList.add('sel');
-    el.style.borderColor = color;
-    el.style.background  = color + '20';
-    el.style.color       = color;
+    // Select
+    selectedTypeIds.add(typeId);
+    optionEl.classList.add('selected');
+    optionEl.style.borderColor = color;
+    optionEl.style.background  = color + '20';
+    optionEl.style.color       = color;
   }
 }
 
-// ============================================================
-// ADMIN: RENDER TYPE LIST
-// ============================================================
-function renderAdminTypeList() {
-  const list = document.getElementById('admin-type-list');
-  if (!list) return;
+/* ═══════════════════════════════════════════════════════════
+   ADMIN PANEL — render type list
+   ═══════════════════════════════════════════════════════════ */
+function renderAdminTypesList() {
+  const listEl = document.getElementById('admin-types-list');
+  if (!listEl) return;
 
-  if (!mistakeTypes.length) {
-    list.innerHTML = `<p style="color:var(--text-muted);font-size:0.875rem;text-align:center;padding:16px">No mistake types defined yet.</p>`;
+  if (!allMistakeTypes.length) {
+    listEl.innerHTML = `
+      <p style="color:var(--text-muted); font-size:0.875rem; text-align:center; padding:20px 0">
+        No mistake types defined yet.
+      </p>`;
     return;
   }
 
-  list.innerHTML = mistakeTypes.map(t => `
-    <div class="type-row" id="tr-${t.id}">
-      <div class="type-row-swatch" style="background:${t.color}"></div>
-      <div class="type-row-info">
-        <div class="type-row-name">${t.icon || ''} ${htmlEsc(t.name)}</div>
-        ${t.description ? `<div class="type-row-desc">${htmlEsc(t.description)}</div>` : ''}
+  listEl.innerHTML = allMistakeTypes.map(type => `
+    <div class="admin-type-row" id="admin-row-${type.id}">
+      <div class="admin-type-swatch" style="background:${type.color}"></div>
+      <div class="admin-type-info">
+        <div class="admin-type-name">${htmlEscape(type.icon || '')} ${htmlEscape(type.name)}</div>
+        ${type.description
+          ? `<div class="admin-type-desc">${htmlEscape(type.description)}</div>`
+          : ''}
       </div>
-      <button class="btn-icon-sm del" title="Delete this type" onclick="adminDeleteType('${t.id}','${htmlEsc(t.name)}')">🗑</button>
-    </div>`).join('');
+      <button class="btn-icon-small delete"
+        title="Delete this mistake type"
+        onclick="adminDeleteMistakeType('${type.id}', '${htmlEscape(type.name)}')">
+        🗑
+      </button>
+    </div>`
+  ).join('');
 }
 
-// ============================================================
-// ADMIN: ADD NEW TYPE
-// ============================================================
-async function adminAddType() {
-  if (!isAdmin) return;
+/* ═══════════════════════════════════════════════════════════
+   ADMIN — ADD new mistake type
+   ═══════════════════════════════════════════════════════════ */
+async function adminAddMistakeType() {
+  if (!isAdmin) {
+    showToast('Only admins can add mistake types.', 'error');
+    return;
+  }
 
-  const name  = document.getElementById('new-name').value.trim();
-  const icon  = document.getElementById('new-icon').value.trim();
-  const desc  = document.getElementById('new-desc').value.trim();
-  const color = document.getElementById('new-color').value;
+  const nameValue  = document.getElementById('new-type-name').value.trim();
+  const iconValue  = document.getElementById('new-type-icon').value.trim();
+  const descValue  = document.getElementById('new-type-desc').value.trim();
+  const colorValue = document.getElementById('new-type-color').value;
 
-  if (!name) { toast('Please enter a name for the mistake type.', 'error'); return; }
+  if (!nameValue) {
+    showToast('Please enter a name for the new mistake type.', 'error');
+    return;
+  }
 
-  const duplicate = mistakeTypes.some(t => t.name.toLowerCase() === name.toLowerCase());
-  if (duplicate) { toast(`"${name}" already exists.`, 'error'); return; }
+  const isDuplicate = allMistakeTypes.some(
+    t => t.name.toLowerCase() === nameValue.toLowerCase()
+  );
+  if (isDuplicate) {
+    showToast(`A type named "${nameValue}" already exists.`, 'error');
+    return;
+  }
 
   try {
-    const maxOrder = mistakeTypes.reduce((m, t) => Math.max(m, t.order || 0), 0);
+    const maxOrder = allMistakeTypes.reduce((max, t) => Math.max(max, t.order ?? 0), 0);
 
     await db.collection('mistakeTypes').add({
-      name,
-      icon:        icon || '📌',
-      description: desc,
-      color,
+      name:        nameValue,
+      icon:        iconValue  || '📌',
+      description: descValue  || '',
+      color:       colorValue,
       order:       maxOrder + 1,
       createdBy:   currentUser.uid,
       createdAt:   firebase.firestore.FieldValue.serverTimestamp(),
     });
 
-    // Clear form
-    document.getElementById('new-name').value  = '';
-    document.getElementById('new-icon').value  = '';
-    document.getElementById('new-desc').value  = '';
-    document.getElementById('new-color').value = '#f59e0b';
-    document.getElementById('color-swatch').style.background = '#f59e0b';
+    // Clear the add form
+    document.getElementById('new-type-name').value  = '';
+    document.getElementById('new-type-icon').value  = '';
+    document.getElementById('new-type-desc').value  = '';
+    document.getElementById('new-type-color').value = '#f59e0b';
+    document.getElementById('color-preview-swatch').style.background = '#f59e0b';
 
-    toast(`"${name}" added! ✅`, 'success');
+    showToast(`✅ "${nameValue}" added successfully!`, 'success');
+
   } catch (err) {
-    console.error('[addType]', err);
-    toast('Failed to add mistake type.', 'error');
+    console.error('[adminAddMistakeType]', err.code, err.message);
+    if (err.code === 'permission-denied') {
+      showToast('❌ Firestore rules blocked this action. Check the Setup Guide.', 'error', 7000);
+    } else {
+      showToast(`❌ Failed to add type: ${err.message}`, 'error');
+    }
   }
 }
 
-// ============================================================
-// ADMIN: DELETE TYPE
-// ============================================================
-async function adminDeleteType(id, name) {
+/* ═══════════════════════════════════════════════════════════
+   ADMIN — DELETE mistake type
+   ═══════════════════════════════════════════════════════════ */
+async function adminDeleteMistakeType(typeId, typeName) {
   if (!isAdmin) return;
-  if (!confirm(`Delete mistake type "${name}"?\n\nExisting entries tagged with this type will lose this label.`)) return;
+
+  const confirmed = confirm(
+    `Delete the mistake type "${typeName}"?\n\n` +
+    `Existing journal entries tagged with this type will lose this label, ` +
+    `but the entries themselves will not be deleted.`
+  );
+  if (!confirmed) return;
 
   try {
-    await db.collection('mistakeTypes').doc(id).delete();
-    toast(`"${name}" deleted.`, 'info');
+    await db.collection('mistakeTypes').doc(typeId).delete();
+    showToast(`"${typeName}" has been deleted.`, 'info');
   } catch (err) {
-    console.error('[deleteType]', err);
-    toast('Failed to delete type.', 'error');
+    console.error('[adminDeleteMistakeType]', err.code, err.message);
+    showToast(`❌ Failed to delete type: ${err.message}`, 'error');
   }
 }
 
-function syncColorSwatch() {
-  document.getElementById('color-swatch').style.background = document.getElementById('new-color').value;
+function syncColorPickerSwatch() {
+  const color = document.getElementById('new-type-color').value;
+  document.getElementById('color-preview-swatch').style.background = color;
 }
 
-// ============================================================
-// ADMIN PANEL OPEN
-// ============================================================
 function openAdminModal() {
-  if (!isAdmin) return;
-  renderAdminTypeList();
-  openOverlay('ov-admin');
-}
-
-// ============================================================
-// AUTH FUNCTIONS
-// ============================================================
-function switchTab(tab) {
-  clearAuthError();
-  const loginForm    = document.getElementById('login-form');
-  const registerForm = document.getElementById('register-form');
-  const tLogin       = document.getElementById('tab-login');
-  const tRegister    = document.getElementById('tab-register');
-
-  if (tab === 'login') {
-    loginForm.style.display    = 'block';
-    registerForm.style.display = 'none';
-    tLogin.classList.add('active');
-    tRegister.classList.remove('active');
-  } else {
-    loginForm.style.display    = 'none';
-    registerForm.style.display = 'block';
-    tLogin.classList.remove('active');
-    tRegister.classList.add('active');
+  if (!isAdmin) {
+    showToast('Admin access only.', 'error');
+    return;
   }
+  renderAdminTypesList();
+  openOverlay('overlay-admin');
 }
 
-async function googleSignIn() {
+/* ═══════════════════════════════════════════════════════════
+   SETUP GUIDE
+   ═══════════════════════════════════════════════════════════ */
+function openSetupModal() {
+  openOverlay('overlay-setup');
+}
+
+function copyCodeBlock(elementId, buttonEl) {
+  const codeText = document.getElementById(elementId).textContent;
+  navigator.clipboard.writeText(codeText)
+    .then(() => {
+      buttonEl.textContent = '✓ Copied!';
+      buttonEl.classList.add('copied');
+      setTimeout(() => {
+        buttonEl.textContent = 'Copy';
+        buttonEl.classList.remove('copied');
+      }, 2800);
+    })
+    .catch(() => {
+      showToast('Auto-copy failed — please select the text manually.', 'warn');
+    });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   AUTH FUNCTIONS
+   ═══════════════════════════════════════════════════════════ */
+function switchAuthTab(tab) {
+  clearAuthError();
+  const isLogin = (tab === 'login');
+
+  document.getElementById('login-form').style.display    = isLogin ? 'block' : 'none';
+  document.getElementById('register-form').style.display = isLogin ? 'none' : 'block';
+  document.getElementById('tab-login').classList.toggle('active', isLogin);
+  document.getElementById('tab-register').classList.toggle('active', !isLogin);
+}
+
+async function signInWithGoogle() {
   clearAuthError();
   try {
     const provider = new firebase.auth.GoogleAuthProvider();
     await auth.signInWithPopup(provider);
   } catch (err) {
-    showAuthError(authErrMsg(err.code));
+    console.error('[googleSignIn]', err.code, err.message);
+    showAuthError(formatAuthError(err.code, err.message));
   }
 }
 
-async function emailSignIn() {
+async function signInWithEmail() {
   clearAuthError();
-  const email = document.getElementById('login-email').value.trim();
-  const pass  = document.getElementById('login-pass').value;
-  if (!email || !pass) { showAuthError('Please enter your email and password.'); return; }
+  const email    = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
 
-  const btn = document.getElementById('login-btn');
-  btn.textContent = 'Signing in…';
-  btn.disabled    = true;
+  if (!email || !password) {
+    showAuthError('Please enter your email address and password.');
+    return;
+  }
+
+  const submitBtn = document.getElementById('login-submit-btn');
+  submitBtn.textContent = 'Signing in…';
+  submitBtn.disabled    = true;
 
   try {
-    await auth.signInWithEmailAndPassword(email, pass);
+    await auth.signInWithEmailAndPassword(email, password);
   } catch (err) {
-    showAuthError(authErrMsg(err.code));
+    console.error('[emailSignIn]', err.code, err.message);
+    showAuthError(formatAuthError(err.code, err.message));
   } finally {
-    btn.textContent = 'Sign In';
-    btn.disabled    = false;
+    submitBtn.textContent = 'Sign In';
+    submitBtn.disabled    = false;
   }
 }
 
-async function emailRegister() {
+async function registerWithEmail() {
   clearAuthError();
-  const name  = document.getElementById('reg-name').value.trim();
-  const email = document.getElementById('reg-email').value.trim();
-  const pass  = document.getElementById('reg-pass').value;
+  const displayName = document.getElementById('reg-name').value.trim();
+  const email       = document.getElementById('reg-email').value.trim();
+  const password    = document.getElementById('reg-password').value;
 
-  if (!name)           { showAuthError('Please enter your name.'); return; }
-  if (!email)          { showAuthError('Please enter your email address.'); return; }
-  if (pass.length < 6) { showAuthError('Password must be at least 6 characters.'); return; }
+  if (!displayName)        { showAuthError('Please enter your name.'); return; }
+  if (!email)              { showAuthError('Please enter your email address.'); return; }
+  if (password.length < 6) { showAuthError('Password must be at least 6 characters.'); return; }
 
-  const btn = document.getElementById('reg-btn');
-  btn.textContent = 'Creating account…';
-  btn.disabled    = true;
+  const submitBtn = document.getElementById('register-submit-btn');
+  submitBtn.textContent = 'Creating account…';
+  submitBtn.disabled    = true;
 
   try {
-    const cred = await auth.createUserWithEmailAndPassword(email, pass);
-    await cred.user.updateProfile({ displayName: name });
+    const credential = await auth.createUserWithEmailAndPassword(email, password);
+    await credential.user.updateProfile({ displayName });
+    console.log('[SciJournal] New account registered:', email);
   } catch (err) {
-    showAuthError(authErrMsg(err.code));
+    console.error('[emailRegister]', err.code, err.message);
+    showAuthError(formatAuthError(err.code, err.message));
   } finally {
-    btn.textContent = 'Create Account';
-    btn.disabled    = false;
+    submitBtn.textContent = 'Create Account';
+    submitBtn.disabled    = false;
   }
 }
 
 async function doSignOut() {
-  if (unsub) { unsub(); unsub = null; }
+  tearDownSubscriptions();
   await auth.signOut();
 }
 
-function authErrMsg(code) {
-  return {
-    'auth/invalid-email':        'Invalid email address format.',
-    'auth/user-not-found':       'No account found with this email.',
-    'auth/wrong-password':       'Incorrect password. Please try again.',
-    'auth/invalid-credential':   'Incorrect email or password.',
-    'auth/email-already-in-use': 'An account with this email already exists.',
-    'auth/weak-password':        'Password is too weak (min 6 characters).',
-    'auth/popup-closed-by-user': 'Google sign-in was cancelled.',
-    'auth/network-request-failed': 'Network error. Check your connection.',
-    'auth/too-many-requests':    'Too many attempts. Please wait a moment.',
-  }[code] || 'Sign-in failed. Please try again.';
+function formatAuthError(errorCode, fallbackMessage) {
+  const messages = {
+    'auth/invalid-email':           'Invalid email address format.',
+    'auth/user-not-found':          'No account found with this email address.',
+    'auth/wrong-password':          'Incorrect password. Please try again.',
+    'auth/invalid-credential':      'Incorrect email or password.',
+    'auth/email-already-in-use':    'An account with this email already exists.',
+    'auth/weak-password':           'Password is too weak — please use at least 6 characters.',
+    'auth/popup-closed-by-user':    'Google sign-in was cancelled.',
+    'auth/popup-blocked':           'Pop-up was blocked. Please allow pop-ups for this page.',
+    'auth/network-request-failed':  'Network error. Check your internet connection.',
+    'auth/too-many-requests':       'Too many failed attempts. Please wait a moment.',
+    'auth/user-disabled':           'This account has been disabled.',
+  };
+  return messages[errorCode] || fallbackMessage || 'Sign-in failed. Please try again.';
 }
 
-function showAuthError(msg) {
-  const el = document.getElementById('auth-error');
-  document.getElementById('auth-error-msg').textContent = msg;
-  el.classList.add('show');
+function showAuthError(message) {
+  const box = document.getElementById('auth-error-box');
+  document.getElementById('auth-error-text').textContent = message;
+  box.classList.add('visible');
 }
+
 function clearAuthError() {
-  document.getElementById('auth-error').classList.remove('show');
+  document.getElementById('auth-error-box').classList.remove('visible');
 }
 
-// ============================================================
-// MODAL / OVERLAY HELPERS
-// ============================================================
-function openOverlay(id) {
-  document.getElementById(id).classList.add('open');
+/* ═══════════════════════════════════════════════════════════
+   OVERLAY / MODAL HELPERS
+   ═══════════════════════════════════════════════════════════ */
+function openOverlay(overlayId) {
+  document.getElementById(overlayId).classList.add('open');
   document.body.style.overflow = 'hidden';
 }
-function closeOverlay(id) {
-  document.getElementById(id).classList.remove('open');
-  document.body.style.overflow = '';
-}
-function overlayClose(e, id) {
-  if (e.target.id === id) closeOverlay(id);
+
+function closeOverlay(overlayId) {
+  document.getElementById(overlayId).classList.remove('open');
+  // Only restore scroll if no other overlay is open
+  const anyStillOpen = document.querySelector('.overlay.open');
+  if (!anyStillOpen) document.body.style.overflow = '';
 }
 
-// ============================================================
-// TOAST
-// ============================================================
-function toast(msg, type = 'info') {
-  const ICONS = { success: '✅', error: '❌', info: '💡' };
-  const el = document.createElement('div');
-  el.className = `toast ${type}`;
-  el.innerHTML = `<span>${ICONS[type]}</span><span>${msg}</span>`;
-  document.getElementById('toast-container').appendChild(el);
-  setTimeout(() => el.remove(), 3100);
+function overlayBackdropClick(event, overlayId) {
+  // Only close when clicking the dark backdrop (not modal content)
+  if (event.target.id === overlayId) closeOverlay(overlayId);
 }
 
-// ============================================================
-// UTIL
-// ============================================================
-function htmlEsc(s) {
-  if (s == null) return '';
-  return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+/* ═══════════════════════════════════════════════════════════
+   TOAST NOTIFICATION SYSTEM
+   ═══════════════════════════════════════════════════════════ */
+function showToast(message, type = 'info', duration = 4000) {
+  const iconMap = {
+    success: '✅',
+    error:   '❌',
+    info:    '💡',
+    warn:    '⚠️',
+  };
+
+  const toastEl = document.createElement('div');
+  toastEl.className = `toast ${type}`;
+  toastEl.innerHTML = `
+    <span class="toast-icon">${iconMap[type] || '💡'}</span>
+    <span>${message}</span>`;
+
+  document.getElementById('toast-container').appendChild(toastEl);
+
+  // Auto-remove after duration + animation time
+  setTimeout(() => {
+    toastEl.remove();
+  }, duration + 400);
 }
 
-// Keyboard: Esc closes topmost modal
-document.addEventListener('keydown', e => {
-  if (e.key !== 'Escape') return;
-  const ids = ['ov-admin', 'ov-view', 'ov-entry'];
-  for (const id of ids) {
-    if (document.getElementById(id)?.classList.contains('open')) {
-      closeOverlay(id);
+/* ═══════════════════════════════════════════════════════════
+   UTILITY — HTML escaping (XSS prevention)
+   ═══════════════════════════════════════════════════════════ */
+function htmlEscape(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g,  '&amp;')
+    .replace(/</g,  '&lt;')
+    .replace(/>/g,  '&gt;')
+    .replace(/"/g,  '&quot;')
+    .replace(/'/g,  '&#39;');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   KEYBOARD SHORTCUTS
+   ═══════════════════════════════════════════════════════════ */
+document.addEventListener('keydown', (event) => {
+  if (event.key !== 'Escape') return;
+
+  // Close overlays from front to back
+  const overlayPriority = ['overlay-admin', 'overlay-setup', 'overlay-view', 'overlay-entry'];
+  for (const overlayId of overlayPriority) {
+    const overlayEl = document.getElementById(overlayId);
+    if (overlayEl && overlayEl.classList.contains('open')) {
+      closeOverlay(overlayId);
       break;
     }
   }
