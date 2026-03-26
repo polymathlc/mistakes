@@ -1,0 +1,2473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SciJournal — Science Mistakes Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=JetBrains+Mono:wght@400;500&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Firebase 10 Compat CDN -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+
+<style>
+/* ============================================================
+   CSS VARIABLES & RESET
+   ============================================================ */
+:root {
+  --bg:           #0c0e14;
+  --bg-2:         #13161f;
+  --bg-3:         #1b1f2d;
+  --bg-4:         #242840;
+  --border:       #2b2f45;
+  --border-light: #3c4260;
+  --text:         #e2e8f0;
+  --text-muted:   #7a8499;
+  --text-dim:     #404660;
+  --accent:       #f5a623;
+  --accent-h:     #fbbf24;
+  --accent-dim:   rgba(245,166,35,0.12);
+  --accent-glow:  rgba(245,166,35,0.35);
+  --purple:       #8b5cf6;
+  --purple-dim:   rgba(139,92,246,0.13);
+  --green:        #10b981;
+  --green-dim:    rgba(16,185,129,0.13);
+  --red:          #ef4444;
+  --red-dim:      rgba(239,68,68,0.13);
+  --blue:         #3b82f6;
+  --blue-dim:     rgba(59,130,246,0.13);
+  --r-card:       16px;
+  --r-lg:         20px;
+  --shadow:       0 4px 24px rgba(0,0,0,0.45);
+  --shadow-lg:    0 12px 56px rgba(0,0,0,0.65);
+  --transition:   all 0.2s cubic-bezier(0.4,0,0.2,1);
+  --font-display: 'Playfair Display', serif;
+  --font-mono:    'JetBrains Mono', monospace;
+  --font-body:    'Nunito', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Dot-grid background texture */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.035) 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg-2); }
+::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ============================================================
+   LOADING SCREEN
+   ============================================================ */
+#loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.loading-logo {
+  font-size: 52px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+
+.loading-spinner {
+  width: 44px;
+  height: 44px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-label {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ============================================================
+   TOAST NOTIFICATIONS
+   ============================================================ */
+#toast-container {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 9998;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.toast {
+  background: var(--bg-3);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  box-shadow: var(--shadow);
+  max-width: 380px;
+  animation: toastIn 0.3s ease, toastOut 0.35s ease 2.65s forwards;
+}
+
+.toast.success { border-left: 4px solid var(--green); }
+.toast.error   { border-left: 4px solid var(--red); }
+.toast.info    { border-left: 4px solid var(--accent); }
+
+@keyframes toastIn  { from{opacity:0;transform:translateX(110%) scale(0.9)} to{opacity:1;transform:none} }
+@keyframes toastOut { from{opacity:1;transform:none} to{opacity:0;transform:translateX(110%) scale(0.9)} }
+
+/* ============================================================
+   SHARED FORM / BUTTON PRIMITIVES
+   ============================================================ */
+.form-group { margin-bottom: 16px; }
+.form-group:last-child { margin-bottom: 0; }
+
+.form-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  margin-bottom: 8px;
+}
+
+.form-input {
+  width: 100%;
+  background: var(--bg-3);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 11px 15px;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  transition: var(--transition);
+  outline: none;
+  resize: vertical;
+}
+
+.form-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.form-input::placeholder { color: var(--text-dim); }
+
+textarea.form-input { min-height: 110px; line-height: 1.6; }
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 22px;
+  border: none;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+.btn-primary {
+  background: var(--accent);
+  color: #0c0e14;
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-h);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 18px var(--accent-glow);
+}
+
+.btn-secondary {
+  background: var(--bg-3);
+  border: 1.5px solid var(--border);
+  color: var(--text);
+}
+.btn-secondary:hover { background: var(--bg-4); border-color: var(--border-light); }
+
+.btn-danger {
+  background: var(--red-dim);
+  border: 1.5px solid rgba(239,68,68,0.3);
+  color: #fca5a5;
+}
+.btn-danger:hover { background: rgba(239,68,68,0.22); }
+
+.btn-purple {
+  background: var(--purple-dim);
+  border: 1.5px solid rgba(139,92,246,0.3);
+  color: #c4b5fd;
+}
+.btn-purple:hover { background: rgba(139,92,246,0.22); }
+
+/* ============================================================
+   AUTH PAGE
+   ============================================================ */
+#auth-page {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.auth-wrap {
+  width: 100%;
+  max-width: 440px;
+}
+
+.auth-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 44px 40px;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--purple), var(--accent));
+  background-size: 200% 100%;
+  animation: shimmer 3s linear infinite;
+}
+
+@keyframes shimmer { 0%{background-position:200%} 100%{background-position:-200%} }
+
+.auth-hero {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.auth-icon {
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, var(--accent), var(--purple));
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  margin: 0 auto 14px;
+  box-shadow: 0 8px 24px var(--accent-glow);
+}
+
+.auth-hero h1 {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--accent), #fde68a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 6px;
+}
+
+.auth-hero p {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.auth-tabs {
+  display: flex;
+  background: var(--bg-3);
+  border-radius: 12px;
+  padding: 4px;
+  gap: 4px;
+  margin-bottom: 24px;
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.875rem;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.auth-tab.active {
+  background: var(--accent);
+  color: #0c0e14;
+  box-shadow: 0 2px 10px var(--accent-glow);
+}
+
+.auth-error {
+  background: var(--red-dim);
+  border: 1px solid rgba(239,68,68,0.3);
+  color: #fca5a5;
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 0.85rem;
+  margin-bottom: 16px;
+  display: none;
+  align-items: center;
+  gap: 8px;
+}
+.auth-error.show { display: flex; }
+
+.btn-google {
+  width: 100%;
+  background: var(--bg-3);
+  border: 1.5px solid var(--border);
+  color: var(--text);
+  padding: 13px;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.btn-google:hover { background: var(--bg-4); border-color: var(--border-light); }
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  margin-bottom: 20px;
+}
+.auth-divider::before,
+.auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* ============================================================
+   MAIN APP LAYOUT
+   ============================================================ */
+#main-app {
+  display: none;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: rgba(12,14,20,0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  height: 62px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.header-brand-icon {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, var(--accent), var(--purple));
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.header-brand h1 {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--accent), #fde68a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.badge-admin {
+  background: linear-gradient(135deg, var(--purple), #6366f1);
+  color: white;
+  font-size: 0.675rem;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: 6px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  display: none;
+}
+.badge-admin.visible { display: inline-block; }
+
+.btn-manage {
+  background: var(--purple-dim);
+  border: 1.5px solid rgba(139,92,246,0.3);
+  color: #c4b5fd;
+  padding: 7px 13px;
+  border-radius: 9px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+  display: none;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-body);
+}
+.btn-manage:hover { background: rgba(139,92,246,0.22); }
+.btn-manage.visible { display: flex; }
+
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-3);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 5px 10px 5px 5px;
+}
+
+.user-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  background: linear-gradient(135deg, var(--accent), var(--purple));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.8rem;
+  color: #0c0e14;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.user-display-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  max-width: 110px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-signout {
+  background: var(--red-dim);
+  border: 1.5px solid rgba(239,68,68,0.3);
+  color: #fca5a5;
+  padding: 7px 12px;
+  border-radius: 9px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: var(--font-body);
+}
+.btn-signout:hover { background: rgba(239,68,68,0.22); }
+
+/* ============================================================
+   MAIN CONTENT AREA
+   ============================================================ */
+.app-body {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 36px 28px 60px;
+}
+
+/* ============================================================
+   STATS DASHBOARD
+   ============================================================ */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 36px;
+}
+
+.stat-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+  padding: 20px 22px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: var(--transition);
+}
+.stat-card:hover { border-color: var(--border-light); transform: translateY(-2px); box-shadow: var(--shadow); }
+
+.stat-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 21px;
+  flex-shrink: 0;
+}
+.stat-icon.amber  { background: var(--accent-dim); }
+.stat-icon.purple { background: var(--purple-dim); }
+.stat-icon.green  { background: var(--green-dim); }
+.stat-icon.blue   { background: var(--blue-dim); }
+
+.stat-number {
+  font-family: var(--font-mono);
+  font-size: 1.65rem;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.stat-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+/* ============================================================
+   TOOLBAR (FILTER + SEARCH + ADD)
+   ============================================================ */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.toolbar-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.filter-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  flex-shrink: 0;
+}
+
+.filter-chips { display: flex; gap: 7px; flex-wrap: wrap; }
+
+.chip {
+  padding: 5px 13px;
+  border-radius: 20px;
+  background: var(--bg-3);
+  border: 1.5px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+.chip:hover { border-color: var(--border-light); color: var(--text); }
+.chip.active {
+  background: var(--accent-dim);
+  border-color: rgba(245,166,35,0.5);
+  color: var(--accent);
+}
+
+.toolbar-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+.search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-2);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 13px;
+  transition: var(--transition);
+}
+.search-wrap:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+.search-wrap span { color: var(--text-muted); font-size: 14px; }
+.search-wrap input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  width: 180px;
+}
+.search-wrap input::placeholder { color: var(--text-dim); }
+
+.btn-new {
+  background: var(--accent);
+  color: #0c0e14;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: none;
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+.btn-new:hover { background: var(--accent-h); transform: translateY(-1px); box-shadow: 0 4px 16px var(--accent-glow); }
+
+/* ============================================================
+   ENTRIES GRID
+   ============================================================ */
+.entries-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 20px;
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 90px 24px 60px;
+}
+.empty-state-emoji { font-size: 64px; margin-bottom: 16px; }
+.empty-state h3 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.empty-state p { color: var(--text-muted); font-size: 0.9375rem; line-height: 1.6; }
+
+/* ============================================================
+   ENTRY CARD
+   ============================================================ */
+.entry-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+  overflow: hidden;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  flex-direction: column;
+}
+.entry-card:hover {
+  border-color: var(--border-light);
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
+}
+
+.card-thumb {
+  width: 100%;
+  height: 170px;
+  overflow: hidden;
+  background: var(--bg-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+}
+.card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+.entry-card:hover .card-thumb img { transform: scale(1.04); }
+
+.card-no-image {
+  font-size: 40px;
+  color: var(--text-dim);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.card-no-image span {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+}
+
+.card-body {
+  padding: 16px 18px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.card-title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--text);
+}
+
+.card-date {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  padding-top: 2px;
+  flex-shrink: 0;
+}
+
+.card-topic {
+  font-size: 0.8rem;
+  color: var(--accent);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.card-desc {
+  font-size: 0.855rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex: 1;
+}
+
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.mistake-tag {
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.card-actions {
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+}
+
+.btn-card {
+  flex: 1;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: var(--font-body);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+.btn-card:hover { background: var(--bg-3); color: var(--text); border-color: var(--border-light); }
+.btn-card.edit:hover  { background: var(--accent-dim); border-color: rgba(245,166,35,0.4); color: var(--accent); }
+.btn-card.delete:hover { background: var(--red-dim); border-color: rgba(239,68,68,0.4); color: #fca5a5; }
+
+/* ============================================================
+   MODALS
+   ============================================================ */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 500;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px;
+  overflow-y: auto;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease;
+}
+.overlay.open { opacity: 1; pointer-events: all; }
+
+.modal {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  width: 100%;
+  max-width: 600px;
+  margin: auto;
+  box-shadow: var(--shadow-lg);
+  transform: translateY(24px);
+  transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1);
+  position: relative;
+}
+.overlay.open .modal { transform: translateY(0); }
+.modal.wide { max-width: 680px; }
+
+.modal-header {
+  padding: 22px 26px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.modal-title {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.btn-close {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 16px;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.btn-close:hover { background: var(--bg-4); color: var(--text); }
+
+.modal-body {
+  padding: 22px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.modal-footer {
+  padding: 18px 26px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+/* ============================================================
+   IMAGE UPLOAD AREA
+   ============================================================ */
+.upload-zone {
+  border: 2px dashed var(--border-light);
+  border-radius: 13px;
+  padding: 30px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition);
+  background: var(--bg-3);
+  position: relative;
+  overflow: hidden;
+}
+.upload-zone:hover, .upload-zone.dragover {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+.upload-zone input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+.upload-zone-icon { font-size: 30px; margin-bottom: 8px; }
+.upload-zone-text { font-size: 0.875rem; color: var(--text-muted); font-weight: 600; }
+.upload-zone-sub  { font-size: 0.78rem; color: var(--text-dim); margin-top: 5px; }
+
+.preview-wrap {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  position: relative;
+  display: none;
+}
+.preview-wrap img {
+  width: 100%;
+  max-height: 280px;
+  object-fit: contain;
+  display: block;
+  background: var(--bg-3);
+}
+.preview-btn-remove {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0,0,0,0.75);
+  border: none;
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+.preview-btn-remove:hover { background: var(--red); }
+
+.upload-progress-wrap {
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: none;
+}
+.upload-progress-wrap.show { display: block; }
+.upload-progress-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.upload-progress-bar-bg {
+  background: var(--bg-4);
+  border-radius: 4px;
+  height: 5px;
+  overflow: hidden;
+}
+.upload-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-h));
+  border-radius: 4px;
+  transition: width 0.25s ease;
+  width: 0%;
+}
+
+/* ============================================================
+   MISTAKE TYPE MULTI-SELECT (in entry modal)
+   ============================================================ */
+.mtype-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+  gap: 9px;
+}
+
+.mtype-option {
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 2px solid var(--border);
+  background: var(--bg-3);
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  user-select: none;
+  position: relative;
+}
+.mtype-option:hover { border-color: var(--border-light); color: var(--text); }
+.mtype-option.sel { color: var(--text); }
+
+.mtype-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.mtype-label { flex: 1; line-height: 1.3; }
+.mtype-check { font-size: 13px; display: none; flex-shrink: 0; }
+.mtype-option.sel .mtype-check { display: block; }
+
+/* ============================================================
+   VIEW ENTRY MODAL
+   ============================================================ */
+.view-image {
+  width: 100%;
+  max-height: 320px;
+  object-fit: contain;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-3);
+  display: block;
+}
+
+.view-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.view-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+.view-meta-item strong { color: var(--text); font-weight: 700; }
+
+.view-section-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  margin-bottom: 10px;
+}
+
+.view-desc {
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  color: var(--text-muted);
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  white-space: pre-wrap;
+}
+
+.view-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.view-tag {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ============================================================
+   ADMIN PANEL
+   ============================================================ */
+.admin-section-heading {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+}
+
+.type-list { display: flex; flex-direction: column; gap: 9px; margin-bottom: 28px; }
+
+.type-row {
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: var(--transition);
+}
+.type-row:hover { border-color: var(--border-light); }
+
+.type-row-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.type-row-info { flex: 1; min-width: 0; }
+.type-row-name { font-weight: 800; font-size: 0.9rem; }
+.type-row-desc { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
+
+.btn-icon-sm {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+.btn-icon-sm:hover { background: var(--bg-4); color: var(--text); }
+.btn-icon-sm.del:hover { background: var(--red-dim); border-color: rgba(239,68,68,0.4); color: #fca5a5; }
+
+.add-type-panel {
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+}
+.add-type-panel-title {
+  font-weight: 800;
+  font-size: 0.875rem;
+  margin-bottom: 16px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+input[type="color"] {
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  background: none;
+  padding: 2px;
+}
+.color-swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 680px) {
+  .app-header { padding: 0 16px; }
+  .app-body { padding: 20px 14px 50px; }
+  .auth-card { padding: 32px 22px; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .toolbar { flex-direction: column; align-items: stretch; }
+  .toolbar-actions { justify-content: flex-end; }
+  .search-wrap input { width: 140px; }
+  .entries-grid { grid-template-columns: 1fr; }
+  .form-row { grid-template-columns: 1fr; }
+  .modal { margin: 0; }
+  .user-display-name { display: none; }
+  .btn-manage span { display: none; }
+  .mtype-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 420px) {
+  .stats-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ╔══════════════════════════════════╗ -->
+<!-- ║         LOADING SCREEN           ║ -->
+<!-- ╚══════════════════════════════════╝ -->
+<div id="loading-overlay">
+  <div class="loading-logo">🔬</div>
+  <div class="loading-spinner"></div>
+  <div class="loading-label">Initialising SciJournal…</div>
+</div>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<!-- ╔══════════════════════════════════╗ -->
+<!-- ║            AUTH PAGE             ║ -->
+<!-- ╚══════════════════════════════════╝ -->
+<div id="auth-page">
+  <div class="auth-wrap">
+    <div class="auth-card">
+
+      <div class="auth-hero">
+        <div class="auth-icon">🔬</div>
+        <h1>SciJournal</h1>
+        <p>Track your science mistakes.<br>Understand them. Overcome them.</p>
+      </div>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-login"    onclick="switchTab('login')">Sign In</button>
+        <button class="auth-tab"         id="tab-register" onclick="switchTab('register')">Register</button>
+      </div>
+
+      <div class="auth-error" id="auth-error">
+        <span>⚠️</span><span id="auth-error-msg"></span>
+      </div>
+
+      <!-- Google Button (shared) -->
+      <button class="btn-google" onclick="googleSignIn()">
+        <svg width="18" height="18" viewBox="0 0 24 24">
+          <path fill="#4285f4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34a853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#fbbc05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+          <path fill="#ea4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        Continue with Google
+      </button>
+
+      <div class="auth-divider">or continue with email</div>
+
+      <!-- ── LOGIN FORM ── -->
+      <div id="login-form">
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input class="form-input" type="email" id="login-email" placeholder="you@example.com"
+            onkeydown="if(event.key==='Enter') emailSignIn()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input class="form-input" type="password" id="login-pass" placeholder="Your password"
+            onkeydown="if(event.key==='Enter') emailSignIn()">
+        </div>
+        <button class="btn btn-primary" style="width:100%;padding:13px" id="login-btn" onclick="emailSignIn()">
+          Sign In
+        </button>
+      </div>
+
+      <!-- ── REGISTER FORM ── -->
+      <div id="register-form" style="display:none">
+        <div class="form-group">
+          <label class="form-label">Your Name</label>
+          <input class="form-input" type="text" id="reg-name" placeholder="e.g. Kai Wei"
+            onkeydown="if(event.key==='Enter') emailRegister()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input class="form-input" type="email" id="reg-email" placeholder="you@example.com"
+            onkeydown="if(event.key==='Enter') emailRegister()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password <span style="color:var(--text-dim)">(min 6 chars)</span></label>
+          <input class="form-input" type="password" id="reg-pass" placeholder="Choose a password"
+            onkeydown="if(event.key==='Enter') emailRegister()">
+        </div>
+        <button class="btn btn-primary" style="width:100%;padding:13px" id="reg-btn" onclick="emailRegister()">
+          Create Account
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ╔══════════════════════════════════╗ -->
+<!-- ║            MAIN APP              ║ -->
+<!-- ╚══════════════════════════════════╝ -->
+<div id="main-app">
+
+  <!-- ── HEADER ── -->
+  <header class="app-header">
+    <div class="header-brand">
+      <div class="header-brand-icon">🔬</div>
+      <h1>SciJournal</h1>
+    </div>
+    <div class="header-right">
+      <span class="badge-admin" id="badge-admin">Admin</span>
+      <button class="btn-manage" id="btn-manage" onclick="openAdminModal()">
+        ⚙️ <span>Manage Types</span>
+      </button>
+      <div class="user-chip">
+        <div class="user-avatar" id="hdr-avatar">?</div>
+        <span class="user-display-name" id="hdr-name">—</span>
+      </div>
+      <button class="btn-signout" onclick="doSignOut()">Sign Out</button>
+    </div>
+  </header>
+
+  <!-- ── MAIN BODY ── -->
+  <div class="app-body">
+
+    <!-- Stats -->
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon amber">📓</div>
+        <div>
+          <div class="stat-number" id="stat-total">0</div>
+          <div class="stat-label">Total Entries</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon purple">🗓</div>
+        <div>
+          <div class="stat-number" id="stat-week">0</div>
+          <div class="stat-label">This Week</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon green">📸</div>
+        <div>
+          <div class="stat-number" id="stat-images">0</div>
+          <div class="stat-label">With Images</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon blue">🏆</div>
+        <div>
+          <div class="stat-number" id="stat-top" style="font-size:0.85rem;line-height:1.25">—</div>
+          <div class="stat-label">Top Mistake</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="toolbar-filters">
+        <span class="filter-label">Filter:</span>
+        <div class="filter-chips" id="filter-chips">
+          <button class="chip active" data-id="all" onclick="applyFilter('all', this)">All</button>
+        </div>
+      </div>
+      <div class="toolbar-actions">
+        <div class="search-wrap">
+          <span>🔍</span>
+          <input type="text" placeholder="Search entries…" id="search-inp" oninput="renderCards()">
+        </div>
+        <button class="btn-new" onclick="openEntryModal(null)">＋ New Entry</button>
+      </div>
+    </div>
+
+    <!-- Entries grid -->
+    <div class="entries-grid" id="entries-grid"></div>
+
+  </div>
+</div>
+
+<!-- ╔══════════════════════════════════╗ -->
+<!-- ║      ADD / EDIT ENTRY MODAL      ║ -->
+<!-- ╚══════════════════════════════════╝ -->
+<div class="overlay" id="ov-entry" onclick="overlayClose(event,'ov-entry')">
+  <div class="modal" id="modal-entry">
+    <div class="modal-header">
+      <h2 class="modal-title" id="entry-modal-title">📝 New Entry</h2>
+      <button class="btn-close" onclick="closeOverlay('ov-entry')">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Title -->
+      <div class="form-group">
+        <label class="form-label">Entry Title *</label>
+        <input class="form-input" type="text" id="f-title" placeholder="e.g. Photosynthesis Test — Q4 mistake">
+      </div>
+
+      <!-- Topic + Date -->
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Topic / Chapter</label>
+          <input class="form-input" type="text" id="f-topic" placeholder="e.g. Ch 3 – Photosynthesis">
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Date of Assessment</label>
+          <input class="form-input" type="date" id="f-date">
+        </div>
+      </div>
+
+      <!-- Mistake types -->
+      <div class="form-group">
+        <label class="form-label">Mistake Types Identified *</label>
+        <div class="mtype-grid" id="mtype-selector"></div>
+      </div>
+
+      <!-- Description -->
+      <div class="form-group">
+        <label class="form-label">What went wrong? What is the correct answer?</label>
+        <textarea class="form-input" id="f-desc"
+          placeholder="Describe your mistake clearly and write the correct explanation or answer…"></textarea>
+      </div>
+
+      <!-- Image upload -->
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Attach Image <span style="color:var(--text-dim)">(stored permanently)</span></label>
+        <div class="upload-zone" id="upload-zone"
+          ondragover="dzDragOver(event)" ondragleave="dzDragLeave(event)" ondrop="dzDrop(event)">
+          <input type="file" accept="image/*" id="file-inp" onchange="fileSelected(event)">
+          <div class="upload-zone-icon">📎</div>
+          <div class="upload-zone-text">Drop an image here or click to browse</div>
+          <div class="upload-zone-sub">PNG, JPG, WEBP · Max 10 MB · Saved to your account forever</div>
+        </div>
+        <div class="preview-wrap" id="preview-wrap" style="margin-top:10px">
+          <img id="preview-img" src="" alt="Preview">
+          <button class="preview-btn-remove" onclick="clearImage()">✕</button>
+        </div>
+        <div class="upload-progress-wrap" id="up-progress" style="margin-top:10px">
+          <div class="upload-progress-label">
+            <span id="up-label">Uploading…</span>
+          </div>
+          <div class="upload-progress-bar-bg">
+            <div class="upload-progress-bar" id="up-bar"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeOverlay('ov-entry')">Cancel</button>
+      <button class="btn btn-primary" style="padding:11px 28px" id="save-btn" onclick="saveEntry()">
+        💾 Save Entry
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ╔══════════════════════════════════╗ -->
+<!-- ║         VIEW ENTRY MODAL         ║ -->
+<!-- ╚══════════════════════════════════╝ -->
+<div class="overlay" id="ov-view" onclick="overlayClose(event,'ov-view')">
+  <div class="modal" id="modal-view">
+    <div class="modal-header">
+      <h2 class="modal-title" id="view-title">—</h2>
+      <button class="btn-close" onclick="closeOverlay('ov-view')">✕</button>
+    </div>
+    <div class="modal-body" id="view-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-danger"    id="view-del-btn"  onclick="deleteFromView()">🗑 Delete</button>
+      <button class="btn btn-secondary" id="view-edit-btn" onclick="editFromView()">✏️ Edit</button>
+      <button class="btn btn-secondary" onclick="closeOverlay('ov-view')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ╔══════════════════════════════════╗ -->
+<!-- ║          ADMIN PANEL MODAL       ║ -->
+<!-- ╚══════════════════════════════════╝ -->
+<div class="overlay" id="ov-admin" onclick="overlayClose(event,'ov-admin')">
+  <div class="modal wide" id="modal-admin">
+    <div class="modal-header">
+      <h2 class="modal-title">⚙️ Manage Mistake Types</h2>
+      <button class="btn-close" onclick="closeOverlay('ov-admin')">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Existing types -->
+      <div>
+        <div class="admin-section-heading">📋 Current Mistake Types</div>
+        <div class="type-list" id="admin-type-list"></div>
+      </div>
+
+      <!-- Add new type -->
+      <div class="add-type-panel">
+        <div class="add-type-panel-title">➕ Add New Mistake Type</div>
+
+        <div class="form-row" style="margin-bottom:12px">
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Name *</label>
+            <input class="form-input" type="text" id="new-name" placeholder="e.g. Wrong Units">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Icon (emoji)</label>
+            <input class="form-input" type="text" id="new-icon" placeholder="📐" maxlength="2"
+              style="font-size:1.2rem;text-align:center">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <input class="form-input" type="text" id="new-desc" placeholder="Brief description of this mistake type">
+        </div>
+
+        <div class="form-group" style="margin-bottom:16px">
+          <label class="form-label">Colour</label>
+          <div class="color-row">
+            <input type="color" id="new-color" value="#f59e0b" oninput="syncColorSwatch()">
+            <div class="color-swatch" id="color-swatch" style="background:#f59e0b"></div>
+            <span style="font-size:0.8rem;color:var(--text-muted)">Pick badge colour</span>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" style="padding:11px 22px" onclick="adminAddType()">
+          ➕ Add Mistake Type
+        </button>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeOverlay('ov-admin')">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- ╔══════════════════════════════════╗ -->
+<!-- ║          JAVASCRIPT              ║ -->
+<!-- ╚══════════════════════════════════╝ -->
+<script>
+'use strict';
+
+// ============================================================
+// FIREBASE INITIALISATION
+// ============================================================
+const firebaseConfig = {
+  apiKey:            "AIzaSyAUSI3Uh28IeqASEp0JhH4QPaVt-O3meBo",
+  authDomain:        "mathgen--app.firebaseapp.com",
+  projectId:         "mathgen--app",
+  storageBucket:     "mathgen--app.firebasestorage.app",
+  messagingSenderId: "165654161198",
+  appId:             "1:165654161198:web:16c8bd60eb3a2aa7edbcbf",
+  measurementId:     "G-0MWZFG211D"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const auth    = firebase.auth();
+const db      = firebase.firestore();
+const storage = firebase.storage();
+
+// ============================================================
+// CONSTANTS
+// ============================================================
+const ADMIN_EMAIL = 'chungzhikai@gmail.com';
+
+const SEED_TYPES = [
+  { name: 'Lack of Keywords',         color: '#ef4444', icon: '🔑', description: 'Missing important scientific keywords in the answer',                           order: 1 },
+  { name: 'Wrong Concept Identified', color: '#f97316', icon: '🧪', description: 'Identified the wrong scientific concept or principle',                          order: 2 },
+  { name: 'Lack of Comparison',       color: '#eab308', icon: '⚖️', description: 'Failed to compare between two or more items or scenarios',                     order: 3 },
+  { name: 'Lack of Evidence',         color: '#22c55e', icon: '🔬', description: 'Answer lacks supporting evidence, data, or examples',                           order: 4 },
+  { name: 'Unclear Language',         color: '#3b82f6', icon: '💬', description: 'Language used is vague, ambiguous, or scientifically imprecise',                order: 5 },
+];
+
+// ============================================================
+// APP STATE
+// ============================================================
+let currentUser   = null;
+let isAdmin       = false;
+let allEntries    = [];
+let mistakeTypes  = [];
+let currentFilter = 'all';
+let selTypes      = new Set();     // selected mistake type IDs in entry modal
+let editingId     = null;          // entry ID being edited (null = new)
+let viewingId     = null;          // entry ID being viewed
+let pendingFile   = null;          // File object awaiting upload
+let uploadedURL   = null;          // Firebase Storage download URL (persisted)
+let unsub         = null;          // Firestore onSnapshot unsubscriber
+
+// ============================================================
+// AUTH STATE LISTENER
+// ============================================================
+auth.onAuthStateChanged(async (user) => {
+  document.getElementById('loading-overlay').style.display = 'none';
+
+  if (user) {
+    currentUser = user;
+    await bootstrapUser(user);
+    renderApp();
+  } else {
+    currentUser = null;
+    isAdmin     = false;
+    if (unsub) { unsub(); unsub = null; }
+    showAuth();
+  }
+});
+
+// ============================================================
+// BOOTSTRAP: user doc + seed mistake types
+// ============================================================
+async function bootstrapUser(user) {
+  // Ensure user document exists in Firestore
+  const userRef  = db.collection('users').doc(user.uid);
+  const userSnap = await userRef.get();
+  const role     = user.email === ADMIN_EMAIL ? 'admin' : 'student';
+
+  if (!userSnap.exists) {
+    await userRef.set({
+      uid:         user.uid,
+      email:       user.email,
+      displayName: user.displayName || user.email.split('@')[0],
+      photoURL:    user.photoURL    || null,
+      role,
+      joinedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+  } else if (user.email === ADMIN_EMAIL && userSnap.data().role !== 'admin') {
+    // Promote to admin if email matches
+    await userRef.update({ role: 'admin' });
+  }
+
+  isAdmin = user.email === ADMIN_EMAIL;
+
+  // Seed default mistake types once (only if collection is empty)
+  const snap = await db.collection('mistakeTypes').limit(1).get();
+  if (snap.empty) {
+    const batch = db.batch();
+    SEED_TYPES.forEach(t => {
+      const ref = db.collection('mistakeTypes').doc();
+      batch.set(ref, {
+        ...t,
+        createdBy: user.uid,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    });
+    await batch.commit();
+    console.log('[SciJournal] Seeded default mistake types.');
+  }
+}
+
+// ============================================================
+// SHOW AUTH / APP
+// ============================================================
+function showAuth() {
+  document.getElementById('auth-page').style.display  = 'flex';
+  document.getElementById('main-app').style.display   = 'none';
+}
+
+function renderApp() {
+  document.getElementById('auth-page').style.display  = 'none';
+  document.getElementById('main-app').style.display   = 'block';
+
+  // Header: avatar + name
+  const avatarEl = document.getElementById('hdr-avatar');
+  const nameEl   = document.getElementById('hdr-name');
+  nameEl.textContent = currentUser.displayName || currentUser.email.split('@')[0];
+
+  if (currentUser.photoURL) {
+    avatarEl.innerHTML = `<img src="${currentUser.photoURL}" alt="">`;
+  } else {
+    avatarEl.textContent = (currentUser.displayName || currentUser.email || '?').charAt(0).toUpperCase();
+  }
+
+  if (isAdmin) {
+    document.getElementById('badge-admin').classList.add('visible');
+    document.getElementById('btn-manage').classList.add('visible');
+  } else {
+    document.getElementById('badge-admin').classList.remove('visible');
+    document.getElementById('btn-manage').classList.remove('visible');
+  }
+
+  // Subscribe to live mistake types + entries
+  subscribeToMistakeTypes();
+  subscribeToEntries();
+}
+
+// ============================================================
+// FIRESTORE: MISTAKE TYPES (live)
+// ============================================================
+function subscribeToMistakeTypes() {
+  db.collection('mistakeTypes')
+    .orderBy('order', 'asc')
+    .onSnapshot(
+      snap => {
+        mistakeTypes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderFilterChips();
+        renderMTypeSelector();
+        renderAdminTypeList();
+      },
+      () => {
+        // Fallback without ordering if index not built
+        db.collection('mistakeTypes').onSnapshot(snap => {
+          mistakeTypes = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+            .sort((a, b) => (a.order || 99) - (b.order || 99));
+          renderFilterChips();
+          renderMTypeSelector();
+          renderAdminTypeList();
+        });
+      }
+    );
+}
+
+// ============================================================
+// FIRESTORE: ENTRIES (live, per user)
+// ============================================================
+function subscribeToEntries() {
+  if (unsub) unsub();
+
+  unsub = db.collection('entries')
+    .where('userId', '==', currentUser.uid)
+    .orderBy('createdAt', 'desc')
+    .onSnapshot(
+      snap => {
+        allEntries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        updateStats();
+        renderCards();
+      },
+      err => {
+        console.error('[Entries]', err);
+        toast('Could not load entries. Check Firestore rules.', 'error');
+      }
+    );
+}
+
+// ============================================================
+// STATS
+// ============================================================
+function updateStats() {
+  document.getElementById('stat-total').textContent  = allEntries.length;
+
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const weekCount = allEntries.filter(e => {
+    const d = e.createdAt?.toDate?.() ?? new Date(0);
+    return d > weekAgo;
+  }).length;
+  document.getElementById('stat-week').textContent   = weekCount;
+
+  const withImg = allEntries.filter(e => e.imageURL).length;
+  document.getElementById('stat-images').textContent = withImg;
+
+  // Top mistake type by frequency
+  const freq = {};
+  allEntries.forEach(e => (e.mistakeTypeIds || []).forEach(id => { freq[id] = (freq[id] || 0) + 1; }));
+  const [topId] = Object.entries(freq).sort((a, b) => b[1] - a[1])[0] ?? [];
+  const top = mistakeTypes.find(t => t.id === topId);
+  document.getElementById('stat-top').textContent = top ? `${top.icon || ''} ${top.name}` : '—';
+}
+
+// ============================================================
+// FILTER CHIPS
+// ============================================================
+function renderFilterChips() {
+  const wrap = document.getElementById('filter-chips');
+  let html = `<button class="chip ${currentFilter === 'all' ? 'active' : ''}"
+    data-id="all" onclick="applyFilter('all',this)">All</button>`;
+
+  mistakeTypes.forEach(t => {
+    const active = currentFilter === t.id;
+    const style  = active ? `background:${t.color}22;border-color:${t.color}88;color:${t.color}` : '';
+    html += `<button class="chip ${active ? 'active' : ''}"
+      data-id="${t.id}" style="${style}"
+      onclick="applyFilter('${t.id}',this)">
+      ${t.icon || ''} ${htmlEsc(t.name)}
+    </button>`;
+  });
+
+  wrap.innerHTML = html;
+}
+
+function applyFilter(id, btn) {
+  currentFilter = id;
+  document.querySelectorAll('#filter-chips .chip').forEach(c => {
+    c.classList.remove('active');
+    c.style.cssText = '';
+  });
+  btn.classList.add('active');
+  if (id !== 'all') {
+    const t = mistakeTypes.find(x => x.id === id);
+    if (t) {
+      btn.style.background   = t.color + '22';
+      btn.style.borderColor  = t.color + '88';
+      btn.style.color        = t.color;
+    }
+  }
+  renderCards();
+}
+
+// ============================================================
+// RENDER ENTRY CARDS
+// ============================================================
+function renderCards() {
+  const query  = document.getElementById('search-inp').value.trim().toLowerCase();
+  const grid   = document.getElementById('entries-grid');
+
+  let filtered = allEntries.filter(e => {
+    const matchFilter = currentFilter === 'all' || (e.mistakeTypeIds || []).includes(currentFilter);
+    const matchSearch = !query
+      || (e.title || '').toLowerCase().includes(query)
+      || (e.description || '').toLowerCase().includes(query)
+      || (e.topic || '').toLowerCase().includes(query);
+    return matchFilter && matchSearch;
+  });
+
+  if (!filtered.length) {
+    grid.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-emoji">📓</div>
+        <h3>${query || currentFilter !== 'all' ? 'No matching entries' : 'Nothing here yet'}</h3>
+        <p>${query || currentFilter !== 'all'
+          ? 'Try a different search term or filter.'
+          : 'Click <strong>+ New Entry</strong> to start journalling your science mistakes.'
+        }</p>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(e => buildCard(e)).join('');
+}
+
+function buildCard(e) {
+  const date  = e.assessmentDate
+    ? new Date(e.assessmentDate).toLocaleDateString('en-SG', { day:'2-digit', month:'short', year:'2-digit' })
+    : (e.createdAt?.toDate?.()?.toLocaleDateString('en-SG') || '');
+
+  const types = (e.mistakeTypeIds || []).map(id => mistakeTypes.find(t => t.id === id)).filter(Boolean);
+  const shown = types.slice(0, 3);
+  const extra = types.length - shown.length;
+
+  const tagsHtml = shown.map(t =>
+    `<span class="mistake-tag"
+      style="background:${t.color}20;color:${t.color};border:1px solid ${t.color}40">
+      ${t.icon || ''} ${htmlEsc(t.name)}
+    </span>`
+  ).join('') + (extra > 0 ? `<span class="mistake-tag" style="background:var(--bg-4);color:var(--text-muted)">+${extra}</span>` : '');
+
+  const thumbHtml = e.imageURL
+    ? `<div class="card-thumb">
+        <img src="${htmlEsc(e.imageURL)}" alt="" loading="lazy"
+          onerror="this.parentElement.innerHTML='<div class=card-no-image>📷<span>Image unavailable</span></div>'">
+       </div>`
+    : `<div class="card-thumb">
+        <div class="card-no-image">📓<span>No image attached</span></div>
+       </div>`;
+
+  return `
+    <div class="entry-card" onclick="viewEntry('${e.id}')">
+      ${thumbHtml}
+      <div class="card-body">
+        <div class="card-header">
+          <div class="card-title">${htmlEsc(e.title || 'Untitled Entry')}</div>
+          <div class="card-date">${htmlEsc(date)}</div>
+        </div>
+        ${e.topic ? `<div class="card-topic">📌 ${htmlEsc(e.topic)}</div>` : ''}
+        ${e.description ? `<div class="card-desc">${htmlEsc(e.description)}</div>` : ''}
+        ${tagsHtml ? `<div class="card-tags">${tagsHtml}</div>` : ''}
+      </div>
+      <div class="card-actions" onclick="event.stopPropagation()">
+        <button class="btn-card edit"   onclick="openEntryModal('${e.id}')">✏️ Edit</button>
+        <button class="btn-card delete" onclick="confirmDelete('${e.id}')">🗑 Delete</button>
+      </div>
+    </div>`;
+}
+
+// ============================================================
+// OPEN ENTRY MODAL (new or edit)
+// ============================================================
+function openEntryModal(entryId) {
+  editingId    = entryId;
+  pendingFile  = null;
+  selTypes     = new Set();
+  uploadedURL  = null;
+
+  const isEdit = Boolean(entryId);
+  const entry  = isEdit ? allEntries.find(e => e.id === entryId) : null;
+
+  document.getElementById('entry-modal-title').textContent = isEdit ? '✏️ Edit Entry' : '📝 New Entry';
+  document.getElementById('f-title').value  = entry?.title          || '';
+  document.getElementById('f-topic').value  = entry?.topic          || '';
+  document.getElementById('f-date').value   = entry?.assessmentDate || new Date().toISOString().split('T')[0];
+  document.getElementById('f-desc').value   = entry?.description    || '';
+  document.getElementById('file-inp').value = '';
+
+  // Image state
+  if (entry?.imageURL) {
+    uploadedURL = entry.imageURL;
+    setPreview(entry.imageURL);
+  } else {
+    clearImage();
+  }
+
+  // Pre-select types if editing
+  if (entry?.mistakeTypeIds) {
+    selTypes = new Set(entry.mistakeTypeIds);
+  }
+
+  document.getElementById('up-progress').classList.remove('show');
+  renderMTypeSelector();
+  closeOverlay('ov-view');
+  openOverlay('ov-entry');
+}
+
+// ============================================================
+// SAVE ENTRY
+// ============================================================
+async function saveEntry() {
+  const title = document.getElementById('f-title').value.trim();
+  const topic = document.getElementById('f-topic').value.trim();
+  const date  = document.getElementById('f-date').value;
+  const desc  = document.getElementById('f-desc').value.trim();
+  const btn   = document.getElementById('save-btn');
+
+  if (!title)            { toast('Please enter a title for this entry.', 'error'); return; }
+  if (selTypes.size < 1) { toast('Please select at least one mistake type.', 'error'); return; }
+
+  btn.textContent = '⏳ Saving…';
+  btn.disabled    = true;
+
+  try {
+    // Upload image to Firebase Storage if new file pending
+    if (pendingFile) {
+      uploadedURL = await uploadToStorage(pendingFile);
+    }
+
+    const payload = {
+      userId:         currentUser.uid,
+      title,
+      topic,
+      assessmentDate: date,
+      description:    desc,
+      mistakeTypeIds: Array.from(selTypes),
+      imageURL:       uploadedURL || null,
+      updatedAt:      firebase.firestore.FieldValue.serverTimestamp(),
+    };
+
+    if (editingId) {
+      await db.collection('entries').doc(editingId).update(payload);
+      toast('Entry updated! ✏️', 'success');
+    } else {
+      payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('entries').add(payload);
+      toast('Entry saved! 🎉', 'success');
+    }
+
+    closeOverlay('ov-entry');
+  } catch (err) {
+    console.error('[saveEntry]', err);
+    toast('Failed to save. Check console for details.', 'error');
+  } finally {
+    btn.textContent = '💾 Save Entry';
+    btn.disabled    = false;
+  }
+}
+
+// ============================================================
+// DELETE ENTRY
+// ============================================================
+async function confirmDelete(entryId) {
+  if (!confirm('Delete this journal entry? This cannot be undone.')) return;
+
+  try {
+    const entry = allEntries.find(e => e.id === entryId);
+    await db.collection('entries').doc(entryId).delete();
+
+    // Best-effort: delete image from Storage too
+    if (entry?.imageURL) {
+      try { await storage.refFromURL(entry.imageURL).delete(); } catch (_) {}
+    }
+
+    toast('Entry deleted.', 'info');
+  } catch (err) {
+    console.error('[deleteEntry]', err);
+    toast('Failed to delete entry.', 'error');
+  }
+}
+
+// ============================================================
+// VIEW ENTRY MODAL
+// ============================================================
+function viewEntry(entryId) {
+  const e = allEntries.find(x => x.id === entryId);
+  if (!e) return;
+  viewingId = entryId;
+
+  document.getElementById('view-title').textContent = e.title || 'Entry';
+
+  const types    = (e.mistakeTypeIds || []).map(id => mistakeTypes.find(t => t.id === id)).filter(Boolean);
+  const tagsHtml = types.map(t =>
+    `<span class="view-tag" style="background:${t.color}20;color:${t.color};border:1px solid ${t.color}40">
+      ${t.icon || ''} ${htmlEsc(t.name)}
+    </span>`
+  ).join('');
+
+  const assessDate = e.assessmentDate
+    ? new Date(e.assessmentDate).toLocaleDateString('en-SG', { day:'numeric', month:'long', year:'numeric' })
+    : null;
+  const logDate = e.createdAt?.toDate?.()
+    ? e.createdAt.toDate().toLocaleDateString('en-SG', { day:'numeric', month:'short', year:'numeric' })
+    : null;
+
+  document.getElementById('view-body').innerHTML = `
+    ${e.imageURL ? `<img class="view-image" src="${htmlEsc(e.imageURL)}" alt="Attached image"
+      onerror="this.style.display='none'">` : ''}
+
+    <div class="view-meta">
+      ${e.topic      ? `<div class="view-meta-item">📌 <strong>${htmlEsc(e.topic)}</strong></div>` : ''}
+      ${assessDate   ? `<div class="view-meta-item">📅 Assessment: <strong>${htmlEsc(assessDate)}</strong></div>` : ''}
+      ${logDate      ? `<div class="view-meta-item">🗓 Logged: <strong>${htmlEsc(logDate)}</strong></div>` : ''}
+    </div>
+
+    ${tagsHtml ? `
+      <div>
+        <div class="view-section-label">Mistake Types Identified</div>
+        <div class="view-tags">${tagsHtml}</div>
+      </div>` : ''}
+
+    ${e.description ? `
+      <div>
+        <div class="view-section-label">Reflection & Correct Answer</div>
+        <div class="view-desc">${htmlEsc(e.description)}</div>
+      </div>` : ''}
+  `;
+
+  openOverlay('ov-view');
+}
+
+function editFromView()   { if (viewingId) openEntryModal(viewingId); }
+function deleteFromView() { if (viewingId) { closeOverlay('ov-view'); confirmDelete(viewingId); } }
+
+// ============================================================
+// IMAGE UPLOAD HELPERS
+// ============================================================
+function fileSelected(e) {
+  const file = e.target.files[0];
+  if (file) loadPendingFile(file);
+}
+
+function dzDragOver(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.add('dragover');
+}
+function dzDragLeave()  { document.getElementById('upload-zone').classList.remove('dragover'); }
+function dzDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) loadPendingFile(file);
+  else toast('Please drop an image file (PNG, JPG, WEBP).', 'error');
+}
+
+function loadPendingFile(file) {
+  if (file.size > 10 * 1024 * 1024) { toast('Image exceeds 10 MB limit.', 'error'); return; }
+  pendingFile  = file;
+  uploadedURL  = null;                      // will be set after upload
+  setPreview(URL.createObjectURL(file));
+}
+
+function setPreview(src) {
+  document.getElementById('preview-img').src       = src;
+  document.getElementById('preview-wrap').style.display = 'block';
+  document.getElementById('upload-zone').style.display  = 'none';
+}
+
+function clearImage() {
+  pendingFile  = null;
+  uploadedURL  = null;
+  document.getElementById('file-inp').value              = '';
+  document.getElementById('preview-wrap').style.display  = 'none';
+  document.getElementById('upload-zone').style.display   = 'block';
+}
+
+async function uploadToStorage(file) {
+  return new Promise((resolve, reject) => {
+    const ext   = file.name.split('.').pop() || 'jpg';
+    const fname = `${Date.now()}_${Math.random().toString(36).slice(2,8)}.${ext}`;
+    const path  = `journal_images/${currentUser.uid}/${fname}`;
+    const ref   = storage.ref().child(path);
+
+    const progWrap = document.getElementById('up-progress');
+    const bar      = document.getElementById('up-bar');
+    const label    = document.getElementById('up-label');
+
+    progWrap.classList.add('show');
+    bar.style.width  = '0%';
+    label.textContent = 'Uploading image…';
+
+    const task = ref.put(file);
+
+    task.on('state_changed',
+      snap => {
+        const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
+        bar.style.width   = pct + '%';
+        label.textContent = `Uploading… ${pct}%`;
+      },
+      err => {
+        progWrap.classList.remove('show');
+        reject(err);
+      },
+      async () => {
+        const url = await task.snapshot.ref.getDownloadURL();
+        label.textContent = '✅ Upload complete!';
+        setTimeout(() => progWrap.classList.remove('show'), 1200);
+        resolve(url);
+      }
+    );
+  });
+}
+
+// ============================================================
+// MISTAKE TYPE SELECTOR (in entry modal)
+// ============================================================
+function renderMTypeSelector() {
+  const wrap = document.getElementById('mtype-selector');
+  wrap.innerHTML = '';
+
+  if (!mistakeTypes.length) {
+    wrap.innerHTML = `<p style="color:var(--text-muted);font-size:0.85rem">Loading mistake types…</p>`;
+    return;
+  }
+
+  mistakeTypes.forEach(t => {
+    const sel = selTypes.has(t.id);
+    const div = document.createElement('div');
+    div.className  = `mtype-option ${sel ? 'sel' : ''}`;
+    div.dataset.id = t.id;
+    if (sel) {
+      div.style.borderColor = t.color;
+      div.style.background  = t.color + '20';
+      div.style.color       = t.color;
+    }
+    div.innerHTML = `
+      <div class="mtype-dot" style="background:${t.color}"></div>
+      <span class="mtype-label">${t.icon || ''} ${htmlEsc(t.name)}</span>
+      <span class="mtype-check">✓</span>`;
+    div.addEventListener('click', () => toggleMType(t.id, div, t.color));
+    wrap.appendChild(div);
+  });
+}
+
+function toggleMType(id, el, color) {
+  if (selTypes.has(id)) {
+    selTypes.delete(id);
+    el.classList.remove('sel');
+    el.style.borderColor = '';
+    el.style.background  = '';
+    el.style.color       = '';
+  } else {
+    selTypes.add(id);
+    el.classList.add('sel');
+    el.style.borderColor = color;
+    el.style.background  = color + '20';
+    el.style.color       = color;
+  }
+}
+
+// ============================================================
+// ADMIN: RENDER TYPE LIST
+// ============================================================
+function renderAdminTypeList() {
+  const list = document.getElementById('admin-type-list');
+  if (!list) return;
+
+  if (!mistakeTypes.length) {
+    list.innerHTML = `<p style="color:var(--text-muted);font-size:0.875rem;text-align:center;padding:16px">No mistake types defined yet.</p>`;
+    return;
+  }
+
+  list.innerHTML = mistakeTypes.map(t => `
+    <div class="type-row" id="tr-${t.id}">
+      <div class="type-row-swatch" style="background:${t.color}"></div>
+      <div class="type-row-info">
+        <div class="type-row-name">${t.icon || ''} ${htmlEsc(t.name)}</div>
+        ${t.description ? `<div class="type-row-desc">${htmlEsc(t.description)}</div>` : ''}
+      </div>
+      <button class="btn-icon-sm del" title="Delete this type" onclick="adminDeleteType('${t.id}','${htmlEsc(t.name)}')">🗑</button>
+    </div>`).join('');
+}
+
+// ============================================================
+// ADMIN: ADD NEW TYPE
+// ============================================================
+async function adminAddType() {
+  if (!isAdmin) return;
+
+  const name  = document.getElementById('new-name').value.trim();
+  const icon  = document.getElementById('new-icon').value.trim();
+  const desc  = document.getElementById('new-desc').value.trim();
+  const color = document.getElementById('new-color').value;
+
+  if (!name) { toast('Please enter a name for the mistake type.', 'error'); return; }
+
+  const duplicate = mistakeTypes.some(t => t.name.toLowerCase() === name.toLowerCase());
+  if (duplicate) { toast(`"${name}" already exists.`, 'error'); return; }
+
+  try {
+    const maxOrder = mistakeTypes.reduce((m, t) => Math.max(m, t.order || 0), 0);
+
+    await db.collection('mistakeTypes').add({
+      name,
+      icon:        icon || '📌',
+      description: desc,
+      color,
+      order:       maxOrder + 1,
+      createdBy:   currentUser.uid,
+      createdAt:   firebase.firestore.FieldValue.serverTimestamp(),
+    });
+
+    // Clear form
+    document.getElementById('new-name').value  = '';
+    document.getElementById('new-icon').value  = '';
+    document.getElementById('new-desc').value  = '';
+    document.getElementById('new-color').value = '#f59e0b';
+    document.getElementById('color-swatch').style.background = '#f59e0b';
+
+    toast(`"${name}" added! ✅`, 'success');
+  } catch (err) {
+    console.error('[addType]', err);
+    toast('Failed to add mistake type.', 'error');
+  }
+}
+
+// ============================================================
+// ADMIN: DELETE TYPE
+// ============================================================
+async function adminDeleteType(id, name) {
+  if (!isAdmin) return;
+  if (!confirm(`Delete mistake type "${name}"?\n\nExisting entries tagged with this type will lose this label.`)) return;
+
+  try {
+    await db.collection('mistakeTypes').doc(id).delete();
+    toast(`"${name}" deleted.`, 'info');
+  } catch (err) {
+    console.error('[deleteType]', err);
+    toast('Failed to delete type.', 'error');
+  }
+}
+
+function syncColorSwatch() {
+  document.getElementById('color-swatch').style.background = document.getElementById('new-color').value;
+}
+
+// ============================================================
+// ADMIN PANEL OPEN
+// ============================================================
+function openAdminModal() {
+  if (!isAdmin) return;
+  renderAdminTypeList();
+  openOverlay('ov-admin');
+}
+
+// ============================================================
+// AUTH FUNCTIONS
+// ============================================================
+function switchTab(tab) {
+  clearAuthError();
+  const loginForm    = document.getElementById('login-form');
+  const registerForm = document.getElementById('register-form');
+  const tLogin       = document.getElementById('tab-login');
+  const tRegister    = document.getElementById('tab-register');
+
+  if (tab === 'login') {
+    loginForm.style.display    = 'block';
+    registerForm.style.display = 'none';
+    tLogin.classList.add('active');
+    tRegister.classList.remove('active');
+  } else {
+    loginForm.style.display    = 'none';
+    registerForm.style.display = 'block';
+    tLogin.classList.remove('active');
+    tRegister.classList.add('active');
+  }
+}
+
+async function googleSignIn() {
+  clearAuthError();
+  try {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    await auth.signInWithPopup(provider);
+  } catch (err) {
+    showAuthError(authErrMsg(err.code));
+  }
+}
+
+async function emailSignIn() {
+  clearAuthError();
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-pass').value;
+  if (!email || !pass) { showAuthError('Please enter your email and password.'); return; }
+
+  const btn = document.getElementById('login-btn');
+  btn.textContent = 'Signing in…';
+  btn.disabled    = true;
+
+  try {
+    await auth.signInWithEmailAndPassword(email, pass);
+  } catch (err) {
+    showAuthError(authErrMsg(err.code));
+  } finally {
+    btn.textContent = 'Sign In';
+    btn.disabled    = false;
+  }
+}
+
+async function emailRegister() {
+  clearAuthError();
+  const name  = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const pass  = document.getElementById('reg-pass').value;
+
+  if (!name)           { showAuthError('Please enter your name.'); return; }
+  if (!email)          { showAuthError('Please enter your email address.'); return; }
+  if (pass.length < 6) { showAuthError('Password must be at least 6 characters.'); return; }
+
+  const btn = document.getElementById('reg-btn');
+  btn.textContent = 'Creating account…';
+  btn.disabled    = true;
+
+  try {
+    const cred = await auth.createUserWithEmailAndPassword(email, pass);
+    await cred.user.updateProfile({ displayName: name });
+  } catch (err) {
+    showAuthError(authErrMsg(err.code));
+  } finally {
+    btn.textContent = 'Create Account';
+    btn.disabled    = false;
+  }
+}
+
+async function doSignOut() {
+  if (unsub) { unsub(); unsub = null; }
+  await auth.signOut();
+}
+
+function authErrMsg(code) {
+  return {
+    'auth/invalid-email':        'Invalid email address format.',
+    'auth/user-not-found':       'No account found with this email.',
+    'auth/wrong-password':       'Incorrect password. Please try again.',
+    'auth/invalid-credential':   'Incorrect email or password.',
+    'auth/email-already-in-use': 'An account with this email already exists.',
+    'auth/weak-password':        'Password is too weak (min 6 characters).',
+    'auth/popup-closed-by-user': 'Google sign-in was cancelled.',
+    'auth/network-request-failed': 'Network error. Check your connection.',
+    'auth/too-many-requests':    'Too many attempts. Please wait a moment.',
+  }[code] || 'Sign-in failed. Please try again.';
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  document.getElementById('auth-error-msg').textContent = msg;
+  el.classList.add('show');
+}
+function clearAuthError() {
+  document.getElementById('auth-error').classList.remove('show');
+}
+
+// ============================================================
+// MODAL / OVERLAY HELPERS
+// ============================================================
+function openOverlay(id) {
+  document.getElementById(id).classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeOverlay(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
+}
+function overlayClose(e, id) {
+  if (e.target.id === id) closeOverlay(id);
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function toast(msg, type = 'info') {
+  const ICONS = { success: '✅', error: '❌', info: '💡' };
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${ICONS[type]}</span><span>${msg}</span>`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 3100);
+}
+
+// ============================================================
+// UTIL
+// ============================================================
+function htmlEsc(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// Keyboard: Esc closes topmost modal
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  const ids = ['ov-admin', 'ov-view', 'ov-entry'];
+  for (const id of ids) {
+    if (document.getElementById(id)?.classList.contains('open')) {
+      closeOverlay(id);
+      break;
+    }
+  }
+});
+</script>
+
+</body>
+</html>
