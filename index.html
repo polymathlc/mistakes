@@ -1106,6 +1106,152 @@ textarea.form-input {
 }
 
 /* ============================================================
+   SELECTION MODE
+   ============================================================ */
+.btn-select-mode {
+  background: var(--bg-3);
+  color: var(--text-muted);
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.btn-select-mode:hover {
+  border-color: var(--border-light);
+  color: var(--text);
+  background: var(--bg-4);
+}
+
+.btn-select-mode.active {
+  background: var(--purple-dim);
+  border-color: rgba(139, 92, 246, 0.55);
+  color: var(--purple);
+}
+
+/* Selection checkbox on cards */
+.card-select-checkbox {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 5;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  border: 2px solid var(--border-light);
+  background: var(--bg-2);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+  font-size: 14px;
+  color: transparent;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+.selection-mode .card-select-checkbox {
+  display: flex;
+}
+
+.card-select-checkbox.checked {
+  background: var(--purple);
+  border-color: var(--purple);
+  color: #fff;
+}
+
+.selection-mode .entry-card {
+  cursor: pointer;
+}
+
+.entry-card.selected {
+  border-color: var(--purple);
+  box-shadow: 0 0 0 2px var(--purple-dim), var(--shadow-lg);
+}
+
+/* Floating selection bar */
+.selection-bar {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: var(--bg-2);
+  border: 1.5px solid var(--purple);
+  border-radius: 16px;
+  padding: 12px 22px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  z-index: 900;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(139,92,246,0.15);
+  transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s ease;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.selection-bar.visible {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.selection-bar-count {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: var(--purple);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.selection-bar-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--border);
+}
+
+.selection-bar-btn {
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: var(--bg-3);
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.selection-bar-btn:hover {
+  background: var(--bg-4);
+  color: var(--text);
+  border-color: var(--border-light);
+}
+
+.selection-bar-btn.export-pdf {
+  background: var(--purple-dim);
+  border-color: rgba(139, 92, 246, 0.5);
+  color: var(--purple);
+}
+
+.selection-bar-btn.export-pdf:hover {
+  background: rgba(139, 92, 246, 0.22);
+  border-color: var(--purple);
+}
+
+/* ============================================================
    OVERLAYS (shared backdrop)
    ============================================================ */
 .overlay {
@@ -1930,6 +2076,9 @@ input[type="color"] {
             placeholder="Search entries…"
             oninput="renderEntryCards()">
         </div>
+        <button class="btn-select-mode" id="btn-select-mode" onclick="toggleSelectionMode()">
+          ☑ Select
+        </button>
         <button class="btn-new-entry" onclick="openEntryModal(null)">
           ＋ New Entry
         </button>
@@ -1946,6 +2095,18 @@ input[type="color"] {
     </div>
 
   </div><!-- /.app-body -->
+
+  <!-- Floating selection action bar -->
+  <div class="selection-bar" id="selection-bar">
+    <span class="selection-bar-count" id="selection-bar-count">0 selected</span>
+    <div class="selection-bar-divider"></div>
+    <button class="selection-bar-btn" onclick="selectAllEntries()">Select All</button>
+    <button class="selection-bar-btn" onclick="deselectAllEntries()">Deselect All</button>
+    <div class="selection-bar-divider"></div>
+    <button class="selection-bar-btn export-pdf" onclick="exportSelectedAsPDF()">📄 Export PDF</button>
+    <button class="selection-bar-btn" onclick="toggleSelectionMode()">✕ Cancel</button>
+  </div>
+
 </div><!-- /#main-app -->
 
 <!-- ═══════════════════════════════════════════
@@ -2413,6 +2574,8 @@ let confirmedImageURL   = null;     // Firebase Storage download URL
 let pendingBlobURL      = null;     // Temporary blob URL for preview
 let unsubscribeEntries  = null;     // Firestore listener unsub function
 let unsubscribeTypes    = null;     // Firestore listener unsub function
+let selectionMode       = false;    // Whether selection mode is active
+let selectedEntryIds    = new Set(); // Entry IDs selected for export
 
 /* ═══════════════════════════════════════════════════════════
    AUTH STATE LISTENER — app entry point
@@ -2782,8 +2945,14 @@ function buildEntryCardHTML(entry) {
         </div>
        </div>`;
 
+  const isSelected = selectedEntryIds.has(entry.id);
+
   return `
-    <div class="entry-card" onclick="openViewEntryModal('${entry.id}')">
+    <div class="entry-card${isSelected ? ' selected' : ''}" onclick="handleCardClick('${entry.id}', event)">
+      <div class="card-select-checkbox${isSelected ? ' checked' : ''}"
+        onclick="event.stopPropagation(); toggleEntrySelection('${entry.id}')">
+        ${isSelected ? '✓' : ''}
+      </div>
       ${thumbnailHTML}
       <div class="card-body">
         <div class="card-header-row">
@@ -3578,6 +3747,240 @@ function showToast(message, type = 'info', duration = 4000) {
 }
 
 /* ═══════════════════════════════════════════════════════════
+   SELECTION MODE & PDF EXPORT
+   ═══════════════════════════════════════════════════════════ */
+function handleCardClick(entryId, event) {
+  if (selectionMode) {
+    toggleEntrySelection(entryId);
+  } else {
+    openViewEntryModal(entryId);
+  }
+}
+
+function toggleSelectionMode() {
+  selectionMode = !selectionMode;
+  selectedEntryIds.clear();
+
+  const btn = document.getElementById('btn-select-mode');
+  const grid = document.getElementById('entries-grid');
+
+  btn.classList.toggle('active', selectionMode);
+  btn.textContent = selectionMode ? '☑ Selecting…' : '☑ Select';
+  grid.classList.toggle('selection-mode', selectionMode);
+
+  updateSelectionBar();
+  renderEntryCards();
+}
+
+function toggleEntrySelection(entryId) {
+  if (selectedEntryIds.has(entryId)) {
+    selectedEntryIds.delete(entryId);
+  } else {
+    selectedEntryIds.add(entryId);
+  }
+  updateSelectionBar();
+  renderEntryCards();
+}
+
+function selectAllEntries() {
+  const searchQuery = document.getElementById('search-input').value.trim().toLowerCase();
+  const filtered = allEntries.filter(entry => {
+    const matchesFilter = activeFilterId === 'all' ||
+      (entry.mistakeTypeIds || []).includes(activeFilterId);
+    const matchesSearch = !searchQuery ||
+      (entry.title || '').toLowerCase().includes(searchQuery) ||
+      (entry.description || '').toLowerCase().includes(searchQuery) ||
+      (entry.topic || '').toLowerCase().includes(searchQuery);
+    return matchesFilter && matchesSearch;
+  });
+  filtered.forEach(e => selectedEntryIds.add(e.id));
+  updateSelectionBar();
+  renderEntryCards();
+}
+
+function deselectAllEntries() {
+  selectedEntryIds.clear();
+  updateSelectionBar();
+  renderEntryCards();
+}
+
+function updateSelectionBar() {
+  const bar = document.getElementById('selection-bar');
+  const countEl = document.getElementById('selection-bar-count');
+  const count = selectedEntryIds.size;
+
+  if (selectionMode) {
+    bar.classList.add('visible');
+    countEl.textContent = count === 1 ? '1 selected' : `${count} selected`;
+  } else {
+    bar.classList.remove('visible');
+  }
+}
+
+function exportSelectedAsPDF() {
+  if (selectedEntryIds.size === 0) {
+    alert('Please select at least one entry to export.');
+    return;
+  }
+
+  const selected = allEntries.filter(e => selectedEntryIds.has(e.id));
+
+  // Build print-friendly HTML
+  const entriesHTML = selected.map(entry => {
+    const resolvedTypes = (entry.mistakeTypeIds || [])
+      .map(id => allMistakeTypes.find(t => t.id === id))
+      .filter(Boolean);
+
+    const tagsStr = resolvedTypes.map(t => `${t.icon || ''} ${t.name}`).join(' · ');
+
+    const displayDate = entry.assessmentDate
+      ? new Date(entry.assessmentDate).toLocaleDateString('en-SG', {
+          day: '2-digit', month: 'short', year: 'numeric'
+        })
+      : (entry.createdAt?.toDate?.()?.toLocaleDateString('en-SG', {
+          day: '2-digit', month: 'short', year: 'numeric'
+        }) || '');
+
+    return `
+      <div class="pdf-entry">
+        <div class="pdf-entry-header">
+          <h2>${htmlEscape(entry.title || 'Untitled Entry')}</h2>
+          <span class="pdf-date">${htmlEscape(displayDate)}</span>
+        </div>
+        ${entry.topic ? `<div class="pdf-topic">Topic: ${htmlEscape(entry.topic)}</div>` : ''}
+        ${tagsStr ? `<div class="pdf-tags">Mistake Types: ${htmlEscape(tagsStr)}</div>` : ''}
+        ${entry.imageURL ? `<div class="pdf-image"><img src="${htmlEscape(entry.imageURL)}" alt="Entry image"></div>` : ''}
+        ${entry.description ? `<div class="pdf-description"><strong>Reflection &amp; Correct Answer:</strong><br>${htmlEscape(entry.description)}</div>` : ''}
+      </div>`;
+  }).join('');
+
+  const printHTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SciJournal — Study Notes</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Playfair+Display:wght@700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    color: #1a1a2e;
+    padding: 32px 40px;
+    line-height: 1.6;
+  }
+
+  .pdf-header {
+    text-align: center;
+    margin-bottom: 28px;
+    padding-bottom: 18px;
+    border-bottom: 2px solid #e2e8f0;
+  }
+
+  .pdf-header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    color: #1a1a2e;
+  }
+
+  .pdf-header .pdf-subtitle {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-top: 4px;
+  }
+
+  .pdf-entry {
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    page-break-inside: avoid;
+  }
+
+  .pdf-entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 10px;
+  }
+
+  .pdf-entry-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem;
+    color: #1a1a2e;
+  }
+
+  .pdf-date {
+    font-size: 0.78rem;
+    color: #64748b;
+    white-space: nowrap;
+  }
+
+  .pdf-topic {
+    font-size: 0.88rem;
+    color: #f59e0b;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .pdf-tags {
+    font-size: 0.82rem;
+    color: #6366f1;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+
+  .pdf-image {
+    margin: 12px 0;
+    text-align: center;
+  }
+
+  .pdf-image img {
+    max-width: 100%;
+    max-height: 280px;
+    object-fit: contain;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+  }
+
+  .pdf-description {
+    font-size: 0.9rem;
+    color: #334155;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-top: 8px;
+  }
+
+  @media print {
+    body { padding: 16px 20px; }
+    .pdf-entry { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+  <div class="pdf-header">
+    <h1>SciJournal — Past Mistakes Study Notes</h1>
+    <div class="pdf-subtitle">${selected.length} entr${selected.length === 1 ? 'y' : 'ies'} · Exported ${new Date().toLocaleDateString('en-SG', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+  </div>
+  ${entriesHTML}
+  <script>window.onload = function() { window.print(); }<\/script>
+</body>
+</html>`;
+
+  const printWindow = window.open('', '_blank');
+  if (printWindow) {
+    printWindow.document.write(printHTML);
+    printWindow.document.close();
+  } else {
+    alert('Pop-up blocked. Please allow pop-ups for this site to export PDF.');
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
    UTILITY — HTML escaping (XSS prevention)
    ═══════════════════════════════════════════════════════════ */
 function htmlEscape(str) {
@@ -3595,6 +3998,12 @@ function htmlEscape(str) {
    ═══════════════════════════════════════════════════════════ */
 document.addEventListener('keydown', (event) => {
   if (event.key !== 'Escape') return;
+
+  // Exit selection mode first if active
+  if (selectionMode) {
+    toggleSelectionMode();
+    return;
+  }
 
   // Close overlays from front to back
   const overlayPriority = ['overlay-admin', 'overlay-setup', 'overlay-view', 'overlay-entry'];
